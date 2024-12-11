@@ -1,0 +1,24 @@
+API Endpoints for:
+Services
+Case Studies
+Team Members
+Contact Messages
+Authentication & Security:
+JWT Authentication
+Rate limiting
+CORS protection
+Environment variables
+Documentation:
+Interactive Swagger UI at /api/docs/
+ReDoc at /api/redoc/
+You can access everything through:
+
+Admin Panel: http://127.0.0.1:8000/admin/
+Username: admin
+Password: admin
+API Documentation: http://127.0.0.1:8000/api/docs/
+API Endpoints:
+http://127.0.0.1:8000/api/services/
+http://127.0.0.1:8000/api/case-studies/
+http://127.0.0.1:8000/api/team/
+http://127.0.0.1:8000/api/contact/
