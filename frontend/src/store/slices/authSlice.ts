@@ -12,10 +12,33 @@ const initialState: AuthState = {
 
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ username, password }: { username: string; password: string }) => {
-    const response = await loginAPI(username, password);
-    localStorage.setItem('token', response.access);
-    return response;
+  async ({ username, password }: { username: string; password: string }, { rejectWithValue }) => {
+    try {
+      console.log('Login Attempt:', { username });
+      const response = await loginAPI(username, password);
+      console.log('Login Response:', response);
+
+      // Ensure we're storing the correct token
+      const token = response.access || response.token;
+      if (!token) {
+        throw new Error('No access token received');
+      }
+
+      localStorage.setItem('token', token);
+      return { token, user: response.user };
+    } catch (error: any) {
+      console.error('Login Error Details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      });
+      return rejectWithValue(
+        error.response?.data?.detail || 
+        error.message || 
+        'Login failed'
+      );
+    }
   }
 );
 
@@ -28,6 +51,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       localStorage.removeItem('token');
+      window.location.href = '/login';
     },
     clearError(state) {
       state.error = null;
@@ -41,12 +65,16 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.access;
+        state.token = action.payload.token;
+        state.user = action.payload.user;
         state.isAuthenticated = true;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Login failed';
+        state.token = null;
+        state.isAuthenticated = false;
+        state.error = action.payload as string || 'Login failed';
       });
   },
 });

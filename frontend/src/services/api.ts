@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { TeamMember, Service } from '../types';
+import { TeamMember, Service, CaseStudy } from '../types';
 
 const API_URL = 'http://localhost:8000/api';
 
@@ -13,9 +13,15 @@ export const api = axios.create({
 // Add a request interceptor to add the JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Public endpoints that don't require authentication
+    const publicEndpoints = ['/case-studies/'];
+    const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
+    
+    if (!isPublicEndpoint) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -36,103 +42,132 @@ api.interceptors.response.use(
       headers: error.config?.headers
     });
 
-    if (error.response?.status === 401) {
+    // Only redirect to login for non-public endpoints
+    const publicEndpoints = ['/case-studies/'];
+    const isPublicEndpoint = publicEndpoints.some(endpoint => error.config?.url?.includes(endpoint));
+    
+    if (error.response?.status === 401 && !isPublicEndpoint) {
       localStorage.removeItem('token');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
+// Define pagination response type
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 // Team Members API Methods
 export const fetchTeamMembersAPI = () => {
-  return api.get<TeamMember[]>('/team/');
+  return api.get<PaginatedResponse<TeamMember>>('/team/');
 };
 
-export const addTeamMemberAPI = (memberData: Omit<TeamMember, 'id'>) => {
-  return api.post<TeamMember>('/team/', memberData);
+export const addTeamMemberAPI = (memberData: FormData) => {
+  return api.post<TeamMember>('/team/', memberData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
 };
 
-export const updateTeamMemberAPI = (id: number, memberData: Partial<TeamMember>) => {
-  return api.patch<TeamMember>(`/team/${id}/`, memberData);
+export const updateTeamMemberAPI = (id: number, memberData: FormData) => {
+  // Convert FormData to object for inspection
+  const formDataObj = {};
+  memberData.forEach((value, key) => {
+    formDataObj[key] = value;
+  });
+  console.log('Updating team member with data:', formDataObj);
+
+  return api.patch<TeamMember>(`/team/${id}/`, memberData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
 };
 
 export const deleteTeamMemberAPI = (id: number) => {
   return api.delete(`/team/${id}/`);
 };
 
-// Existing API methods for other resources
+// Auth API Methods
 export const loginUser = async (username: string, password: string) => {
-  const response = await api.post('/token/', { username, password });
-  return response.data;
-};
-
-export const getServices = async () => {
-  const response = await api.get('/services/');
-  return response.data;
-};
-
-export const createService = async (data: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
   try {
-    const response = await api.post<Service>('/services/', data);
-    return response.data;
-  } catch (error: any) {
-    console.error('Create service API error:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      headers: error.response?.headers,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        data: error.config?.data
-      }
+    const response = await api.post('/token/', {
+      username,
+      password,
     });
+
+    if (response.data?.access) {
+      localStorage.setItem('token', response.data.access);
+      return response.data;
+    } else {
+      throw new Error('Invalid response format');
+    }
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      throw new Error('Invalid credentials');
+    }
     throw error;
   }
 };
 
-export const updateService = async (id: number, data: any) => {
-  const response = await api.patch(`/services/${id}/`, data);
-  return response.data;
+// Services API Methods
+export const getServices = () => {
+  return api.get<Service[]>('/services/');
 };
 
-export const deleteService = async (id: number) => {
-  const response = await api.delete(`/services/${id}/`);
-  return response.data;
+export const createService = (data: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
+  return api.post<Service>('/services/', data);
 };
 
-// Similar methods for other resources can be added here
-export const getCaseStudies = async () => {
-  const response = await api.get('/case-studies/');
-  return response.data;
+export const updateService = (id: number, data: any) => {
+  return api.patch<Service>(`/services/${id}/`, data);
 };
 
-export const createCaseStudy = async (data: any) => {
-  const response = await api.post('/case-studies/', data);
-  return response.data;
+export const deleteService = (id: number) => {
+  return api.delete(`/services/${id}/`);
 };
 
-export const updateCaseStudy = async (id: number, data: any) => {
-  const response = await api.patch(`/case-studies/${id}/`, data);
-  return response.data;
+// Case Studies API Methods
+export const getCaseStudies = () => {
+  return api.get<PaginatedResponse<CaseStudy>>('/case-studies/');
 };
 
-export const deleteCaseStudy = async (id: number) => {
-  const response = await api.delete(`/case-studies/${id}/`);
-  return response.data;
+export const createCaseStudy = (data: FormData) => {
+  return api.post<CaseStudy>('/case-studies/', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
 };
 
-export const getCaseStudy = async (id: number) => {
-  const response = await api.get(`/case-studies/${id}/`);
-  return response.data;
+export const updateCaseStudy = (id: number, data: FormData) => {
+  return api.patch<CaseStudy>(`/case-studies/${id}/`, data, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
 };
 
-export const submitContactForm = async (data: {
+export const deleteCaseStudy = (id: number) => {
+  return api.delete(`/case-studies/${id}/`);
+};
+
+export const getCaseStudy = (id: number) => {
+  return api.get<CaseStudy>(`/case-studies/${id}/`);
+};
+
+// Contact Form API Methods
+export const submitContactForm = (data: {
   name: string;
   email: string;
   company?: string;
   message: string;
 }) => {
-  const response = await api.post('/contact/', data);
-  return response.data;
+  return api.post('/contact/', data);
 };

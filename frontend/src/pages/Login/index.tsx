@@ -35,6 +35,10 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  useEffect(() => {
+    console.log('Login State:', { isAuthenticated, error, loading });
+  }, [isAuthenticated, error, loading]);
+
   const formik = useFormik({
     initialValues: {
       username: '',

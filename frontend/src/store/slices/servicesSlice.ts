@@ -24,10 +24,10 @@ export const fetchServices = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await getServices();
-      // Handle different possible response structures
-      return Array.isArray(response) 
-        ? response 
-        : (response.results || response.data || []);
+      const data = response.data;
+      return Array.isArray(data) 
+        ? data 
+        : (data.results || data || []);
     } catch (error) {
       return rejectWithValue('Failed to fetch services');
     }
@@ -38,7 +38,8 @@ export const addService = createAsyncThunk(
   'services/addService',
   async (serviceData: Omit<Service, 'id' | 'created_at' | 'updated_at'>, { rejectWithValue }) => {
     try {
-      return await createService(serviceData);
+      const response = await createService(serviceData);
+      return response.data;
     } catch (error: any) {
       console.error('Add service error details:', {
         message: error.message,
@@ -46,7 +47,6 @@ export const addService = createAsyncThunk(
         status: error.response?.status
       });
       
-      // Extract more specific error message if available
       const errorMessage = 
         error.response?.data?.detail || 
         error.response?.data?.message || 
@@ -61,9 +61,21 @@ export const updateServiceAction = createAsyncThunk(
   'services/updateService',
   async ({ id, data }: { id: number, data: Partial<Service> }, { rejectWithValue }) => {
     try {
-      return await updateService(id, data);
-    } catch (error) {
-      return rejectWithValue('Failed to update service');
+      const response = await updateService(id, data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Update service action error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      const errorMessage = 
+        error.response?.data?.detail || 
+        error.response?.data?.message || 
+        'Failed to update service';
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -83,7 +95,11 @@ export const deleteServiceAction = createAsyncThunk(
 const servicesSlice = createSlice({
   name: 'services',
   initialState,
-  reducers: {},
+  reducers: {
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchServices.pending, (state) => {
@@ -116,7 +132,7 @@ const servicesSlice = createSlice({
       })
       .addCase(updateServiceAction.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.services.findIndex(s => s.id === action.payload.id);
+        const index = state.services.findIndex(service => service.id === action.payload.id);
         if (index !== -1) {
           state.services[index] = action.payload;
         }

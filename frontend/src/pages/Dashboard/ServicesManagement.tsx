@@ -100,7 +100,7 @@ const ServicesManagement: React.FC = () => {
       // Update existing service
       dispatch(updateServiceAction({
         id: editingId,
-        ...serviceData,
+        data: serviceData,
       }));
     } else {
       // Add new service

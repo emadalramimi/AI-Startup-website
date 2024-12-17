@@ -1,26 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
   Button,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
+  Card,
+  CardContent,
+  CardActions,
+  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  CircularProgress,
+  IconButton,
+  Avatar,
+  Container,
+  Tooltip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import { RootState } from '../../store';
 import { 
   fetchTeamMembers,
@@ -28,253 +29,185 @@ import {
   updateTeamMemberAction, 
   deleteTeamMemberAction 
 } from '../../store/slices/teamSlice';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  position: string;
-  bio?: string;
-  image?: string;
-  linkedin_url?: string;
-  github_url?: string;
-}
-
-interface TeamMemberFormData {
-  name: string;
-  position: string;
-  bio: string;
-  image: string;
-  linkedin_url?: string;
-  github_url?: string;
-}
-
-const initialFormData: TeamMemberFormData = {
-  name: '',
-  position: '',
-  bio: '',
-  image: '',
-  linkedin_url: '',
-  github_url: '',
-};
+import { TeamMember } from '../../types';
+import { useSnackbar } from 'notistack';
+import TeamMemberForm from '../../components/TeamMemberForm';
 
 const TeamManagement: React.FC = () => {
   const dispatch = useDispatch();
-  const { teamMembers, loading, error } = useSelector((state: RootState) => {
+  const { teamMembers, loading } = useSelector((state: RootState) => {
     const teamData = state.team.teamMembers;
-    
-    // Ensure we always have an array
-    const teamMembersList = Array.isArray(teamData) 
-      ? teamData 
-      : (teamData?.results || teamData?.data || []);
-    
+    const teamMembersList = Array.isArray(teamData) ? teamData : [];
     return {
       teamMembers: teamMembersList,
       loading: state.team.loading,
-      error: state.team.error
     };
   });
+  const error = useSelector((state: RootState) => state.team.error);
+  const { enqueueSnackbar } = useSnackbar();
+  
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<TeamMemberFormData>(initialFormData);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | undefined>();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     dispatch(fetchTeamMembers());
   }, [dispatch]);
 
-  const handleOpen = () => setOpen(true);
+  const handleOpen = (member?: TeamMember) => {
+    setSelectedMember(member);
+    setOpen(true);
+  };
+
   const handleClose = () => {
     setOpen(false);
-    setFormData(initialFormData);
-    setEditingId(null);
+    setSelectedMember(undefined);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = () => {
-    if (editingId) {
-      // Update existing member
-      dispatch(updateTeamMemberAction({
-        id: editingId,
-        data: formData
-      }));
-    } else {
-      // Add new member
-      dispatch(addTeamMember(formData));
+  const handleSubmit = async (formData: FormData) => {
+    try {
+      if (selectedMember?.id) {
+        await dispatch(updateTeamMemberAction({ 
+          id: selectedMember.id, 
+          data: formData 
+        }));
+        enqueueSnackbar('Team member updated successfully', { variant: 'success' });
+      } else {
+        await dispatch(addTeamMember(formData));
+        enqueueSnackbar('Team member added successfully', { variant: 'success' });
+      }
+      handleClose();
+    } catch (error: any) {
+      enqueueSnackbar(error.message || 'Failed to save team member', { variant: 'error' });
     }
-    handleClose();
   };
 
-  const handleEdit = (member: TeamMember) => {
-    setEditingId(member.id);
-    setFormData({
-      name: member.name,
-      position: member.position,
-      bio: member.bio || '',
-      image: member.image || '',
-      linkedin_url: member.linkedin_url || '',
-      github_url: member.github_url || '',
-    });
-    handleOpen();
+  const handleDeleteClick = (id: number) => {
+    setMemberToDelete(id);
+    setDeleteConfirmOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    dispatch(deleteTeamMemberAction(id));
+  const handleDeleteConfirm = async () => {
+    if (memberToDelete) {
+      try {
+        await dispatch(deleteTeamMemberAction(memberToDelete));
+        enqueueSnackbar('Team member deleted successfully', { variant: 'success' });
+      } catch (error: any) {
+        enqueueSnackbar(error.message || 'Failed to delete team member', { variant: 'error' });
+      }
+    }
+    setDeleteConfirmOpen(false);
+    setMemberToDelete(null);
   };
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
-        <Typography color="error" variant="h6">
-          Error loading team members
-        </Typography>
-        <Typography color="error" variant="body2">
-          {error}
-        </Typography>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={() => dispatch(fetchTeamMembers())}
-          sx={{ mt: 2 }}
-        >
-          Retry
-        </Button>
-      </Box>
-    );
-  }
-
-  if (teamMembers.length === 0) {
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
-        <Typography variant="h6">
-          No team members found
-        </Typography>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleOpen}
-          sx={{ mt: 2 }}
-        >
-          Add First Team Member
-        </Button>
-      </Box>
-    );
-  }
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Team Management
-      </Typography>
-      <Button variant="contained" onClick={handleOpen}>
-        Add Team Member
-      </Button>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Typography variant="h4" component="h1">
+          Team Management
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpen()}
+        >
+          Add Team Member
+        </Button>
+      </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Position</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {teamMembers.map((member: TeamMember) => (
-              <TableRow key={member.id}>
-                <TableCell>{member.name}</TableCell>
-                <TableCell>{member.position}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleEdit(member)}>
+      <Grid container spacing={3}>
+        {teamMembers.map((member) => (
+          <Grid item xs={12} sm={6} md={4} key={member.id}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
+                  <Avatar
+                    src={typeof member.image === 'string' ? member.image : undefined}
+                    sx={{ width: 100, height: 100, mb: 2 }}
+                    alt={member.name}
+                  />
+                  <Typography variant="h6" component="h2" align="center">
+                    {member.name}
+                  </Typography>
+                  <Typography color="textSecondary" gutterBottom align="center">
+                    {member.position}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {member.bio}
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                <Box>
+                  {member.linkedin_url && (
+                    <Tooltip title="LinkedIn Profile">
+                      <IconButton
+                        href={member.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <LinkedInIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {member.github_url && (
+                    <Tooltip title="GitHub Profile">
+                      <IconButton
+                        href={member.github_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <GitHubIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
+                <Box>
+                  <IconButton onClick={() => handleOpen(member)}>
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(member.id)}>
+                  <IconButton onClick={() => handleDeleteClick(member.id!)}>
                     <DeleteIcon />
                   </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                </Box>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
-      <Dialog open={open} onClose={handleClose}>
+      {/* Add/Edit Dialog */}
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editingId ? 'Edit Team Member' : 'Add Team Member'}
+          {selectedMember ? 'Edit Team Member' : 'Add Team Member'}
         </DialogTitle>
         <DialogContent>
-          <TextField
-            name="name"
-            label="Name"
-            fullWidth
-            margin="normal"
-            value={formData.name}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="position"
-            label="Position"
-            fullWidth
-            margin="normal"
-            value={formData.position}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="bio"
-            label="Bio"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={4}
-            value={formData.bio}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="image"
-            label="Image URL"
-            fullWidth
-            margin="normal"
-            value={formData.image}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="linkedin_url"
-            label="LinkedIn URL"
-            fullWidth
-            margin="normal"
-            value={formData.linkedin_url}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="github_url"
-            label="GitHub URL"
-            fullWidth
-            margin="normal"
-            value={formData.github_url}
-            onChange={handleInputChange}
+          <TeamMemberForm
+            initialData={selectedMember}
+            onSubmit={handleSubmit}
+            isLoading={loading}
+            error={error}
           />
         </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this team member? This action cannot be undone.
+          </Typography>
+        </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmit} color="primary">
-            {editingId ? 'Update' : 'Add'}
+          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   );
 };
 

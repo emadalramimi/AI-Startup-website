@@ -1,415 +1,302 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import {
-  Box,
-  Button,
-  Typography,
-  Card,
-  CardContent,
-  CardActions,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
-  CircularProgress,
+import { 
+    Box, 
+    Button, 
+    TextField, 
+    Typography, 
+    Dialog, 
+    DialogActions, 
+    DialogContent, 
+    DialogTitle,
+    Grid,
+    IconButton
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { RootState } from '../../store';
-import { addCaseStudy, updateCaseStudyAction, deleteCaseStudyAction, fetchCaseStudies } from '../../store/slices/caseStudiesSlice';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { 
+    fetchCaseStudies, 
+    createCaseStudy, 
+    updateCaseStudy, 
+    deleteCaseStudy 
+} from '../../store/slices/caseStudiesSlice';
+import ImageUpload from '../../components/ImageUpload';
 
 interface CaseStudyFormData {
-  title: string;
-  description: string;
-  client: string;
-  challenge: string;
-  solution: string;
-  results: string;
-  imageUrl: string;
+    id?: number;
+    title: string;
+    description: string;
+    client_name: string;
+    client_industry: string;
+    challenge: string;
+    solution: string;
+    results: string;
+    image?: File | null;
+    order?: number;
 }
 
-const initialFormData: CaseStudyFormData = {
-  title: '',
-  description: '',
-  client: '',
-  challenge: '',
-  solution: '',
-  results: '',
-  imageUrl: '',
-};
-
 const CaseStudiesManagement: React.FC = () => {
-  const dispatch = useDispatch();
-  const { caseStudies, loading } = useSelector((state: RootState) => {
-    const caseStudiesData = state.caseStudies.caseStudies;
-    
-    // Ensure we always have an array
-    const caseStudiesList = Array.isArray(caseStudiesData) 
-      ? caseStudiesData 
-      : (caseStudiesData?.results || caseStudiesData?.data || []);
-    
-    return {
-      caseStudies: caseStudiesList,
-      loading: state.caseStudies.loading
+    const dispatch = useDispatch();
+    const { caseStudies, loading, error } = useSelector((state: RootState) => state.caseStudies);
+
+    const [open, setOpen] = useState(false);
+    const [currentCaseStudy, setCurrentCaseStudy] = useState<CaseStudyFormData>({
+        title: '',
+        description: '',
+        client_name: '',
+        client_industry: '',
+        challenge: '',
+        solution: '',
+        results: '',
+        image: null,
+        order: 0
+    });
+
+    useEffect(() => {
+        dispatch(fetchCaseStudies());
+    }, [dispatch]);
+
+    const handleOpen = (caseStudy?: CaseStudyFormData) => {
+        if (caseStudy) {
+            setCurrentCaseStudy({
+                ...caseStudy,
+                image: null  // Reset image to prevent unnecessary updates
+            });
+        } else {
+            setCurrentCaseStudy({
+                title: '',
+                description: '',
+                client_name: '',
+                client_industry: '',
+                challenge: '',
+                solution: '',
+                results: '',
+                image: null,
+                order: 0
+            });
+        }
+        setOpen(true);
     };
-  });
 
-  // Use state with explicit type and initial state
-  const [dialogState, setDialogState] = useState<{
-    open: boolean;
-    mode: 'add' | 'edit';
-    editingId: number | null;
-    formData: CaseStudyFormData;
-  }>({
-    open: false,
-    mode: 'add',
-    editingId: null,
-    formData: { ...initialFormData }
-  });
+    const handleClose = () => {
+        setOpen(false);
+    };
 
-  useEffect(() => {
-    console.error('Component Render - Dialog State:', dialogState);
-  }, [dialogState]);
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setCurrentCaseStudy(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
-  useEffect(() => {
-    dispatch(fetchCaseStudies());
-  }, [dispatch]);
+    const handleImageChange = (file: File | null) => {
+        setCurrentCaseStudy(prev => ({
+            ...prev,
+            image: file
+        }));
+    };
 
-  const handleOpen = (mode: 'add' | 'edit' = 'add') => {
-    console.error('handleOpen CALLED:', { 
-      mode, 
-      currentState: dialogState 
-    });
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    setDialogState(prev => {
-      const newState = {
-        ...prev,
-        open: true,
-        mode,
-        formData: mode === 'add' ? { ...initialFormData } : prev.formData,
-        editingId: mode === 'add' ? null : prev.editingId
-      };
-      
-      console.error('Dialog State Updated:', { 
-        prevState: prev, 
-        newState,
-        stackTrace: new Error('State Update Trace').stack 
-      });
+        const formData = new FormData();
+        
+        // Append all fields to FormData
+        Object.entries(currentCaseStudy).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                if (key === 'image' && value instanceof File) {
+                    formData.append(key, value);
+                } else if (key !== 'image') {
+                    formData.append(key, String(value));
+                }
+            }
+        });
 
-      return newState;
-    });
-  };
+        try {
+            if (currentCaseStudy.id) {
+                // Update existing case study
+                await dispatch(updateCaseStudy({ 
+                    id: currentCaseStudy.id, 
+                    data: formData 
+                }));
+            } else {
+                // Create new case study
+                await dispatch(createCaseStudy(formData));
+            }
+            
+            handleClose();
+        } catch (err) {
+            console.error('Case Study Submission Error:', err);
+        }
+    };
 
-  const handleClose = () => {
-    console.error('handleClose CALLED');
-    setDialogState(prev => ({
-      ...prev,
-      open: false,
-      mode: 'add',
-      editingId: null,
-      formData: { ...initialFormData }
-    }));
-  };
+    const handleDelete = (id: number) => {
+        if (window.confirm('Are you sure you want to delete this case study?')) {
+            dispatch(deleteCaseStudy(id));
+        }
+    };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setDialogState(prev => ({
-      ...prev,
-      formData: { ...prev.formData, [name]: value }
-    }));
-  };
-
-  const handleSubmit = () => {
-    console.error('handleSubmit CALLED', { formData: dialogState.formData });
-    
-    if (!dialogState.formData.title.trim()) {
-      alert('Case Study title is required');
-      return;
-    }
-
-    if (dialogState.mode === 'edit' && dialogState.editingId !== null) {
-      // Update existing case study
-      dispatch(updateCaseStudyAction({
-        id: dialogState.editingId,
-        ...dialogState.formData,
-      }));
-    } else {
-      // Add new case study
-      dispatch(addCaseStudy(dialogState.formData));
-    }
-    
-    handleClose();
-  };
-
-  const handleEdit = (caseStudy: any) => {
-    console.error('handleEdit CALLED', { caseStudy });
-    setDialogState(prev => ({
-      ...prev,
-      open: true,
-      mode: 'edit',
-      editingId: caseStudy.id,
-      formData: {
-        title: caseStudy.title,
-        description: caseStudy.description,
-        client: caseStudy.client,
-        challenge: caseStudy.challenge || '',
-        solution: caseStudy.solution || '',
-        results: caseStudy.results || '',
-        imageUrl: caseStudy.imageUrl || '',
-      }
-    }));
-  };
-
-  const handleDelete = (id: number) => {
-    dispatch(deleteCaseStudyAction(id));
-  };
-
-  if (loading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100%',
-          p: 3 
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+        <Box sx={{ p: 3 }}>
+            <Typography variant="h4" gutterBottom>
+                Case Studies Management
+            </Typography>
 
-  if (caseStudies.length === 0) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Case Studies Management
-        </Typography>
-        <Button 
-          color="primary" 
-          variant="contained" 
-          onClick={handleOpen} 
-          sx={{ mb: 2 }}
-        >
-          Add First Case Study
-        </Button>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column',
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            mt: 4 
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            No case studies found
-          </Typography>
-          <Typography variant="body1" color="textSecondary" sx={{ mb: 2 }}>
-            Start by adding your first case study
-          </Typography>
+            <Button 
+                variant="contained" 
+                startIcon={<AddIcon />} 
+                onClick={() => handleOpen()}
+                sx={{ mb: 2 }}
+            >
+                Add Case Study
+            </Button>
+
+            {loading && <Typography>Loading...</Typography>}
+            {error && <Typography color="error">{error}</Typography>}
+
+            <Grid container spacing={3}>
+                {caseStudies.map((caseStudy) => (
+                    <Grid item xs={12} md={4} key={caseStudy.id}>
+                        <Box sx={{ 
+                            border: '1px solid #ddd', 
+                            borderRadius: 2, 
+                            p: 2, 
+                            position: 'relative' 
+                        }}>
+                            <Typography variant="h6">{caseStudy.title}</Typography>
+                            <Typography variant="body2">{caseStudy.description}</Typography>
+                            
+                            <Box sx={{ 
+                                position: 'absolute', 
+                                top: 10, 
+                                right: 10 
+                            }}>
+                                <IconButton 
+                                    color="primary" 
+                                    onClick={() => handleOpen(caseStudy)}
+                                >
+                                    <EditIcon />
+                                </IconButton>
+                                <IconButton 
+                                    color="error" 
+                                    onClick={() => handleDelete(caseStudy.id)}
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Box>
+                        </Box>
+                    </Grid>
+                ))}
+            </Grid>
+
+            <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+                <DialogTitle>
+                    {currentCaseStudy.id ? 'Edit Case Study' : 'Add Case Study'}
+                </DialogTitle>
+                <DialogContent>
+                    <form onSubmit={handleSubmit}>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    name="title"
+                                    label="Title"
+                                    fullWidth
+                                    value={currentCaseStudy.title}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    name="client_name"
+                                    label="Client Name"
+                                    fullWidth
+                                    value={currentCaseStudy.client_name}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <TextField
+                                    name="client_industry"
+                                    label="Client Industry"
+                                    fullWidth
+                                    value={currentCaseStudy.client_industry}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="description"
+                                    label="Description"
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    value={currentCaseStudy.description}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="challenge"
+                                    label="Challenge"
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    value={currentCaseStudy.challenge}
+                                    onChange={handleChange}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="solution"
+                                    label="Solution"
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    value={currentCaseStudy.solution}
+                                    onChange={handleChange}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="results"
+                                    label="Results"
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    value={currentCaseStudy.results}
+                                    onChange={handleChange}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <ImageUpload 
+                                    onImageChange={handleImageChange}
+                                    existingImage={currentCaseStudy.image}
+                                />
+                            </Grid>
+                        </Grid>
+                    </form>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button 
+                        type="submit" 
+                        color="primary" 
+                        variant="contained"
+                        onClick={handleSubmit}
+                    >
+                        Save Case Study
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
-      </Box>
     );
-  }
-
-  return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Case Studies Management
-      </Typography>
-      <Button 
-        variant="contained" 
-        onClick={handleOpen} 
-        sx={{ mb: 2 }}
-      >
-        Add New Case Study
-      </Button>
-
-      <Grid container spacing={3}>
-        {caseStudies.map((caseStudy) => (
-          <Grid item xs={12} sm={6} md={4} key={caseStudy.id}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">{caseStudy.title}</Typography>
-                <Typography variant="body2">{caseStudy.description}</Typography>
-              </CardContent>
-              <CardActions>
-                <IconButton onClick={() => handleEdit(caseStudy)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDelete(caseStudy.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      <Dialog 
-        open={dialogState.open} 
-        onClose={handleClose}
-        aria-labelledby="case-study-dialog-title"
-        fullWidth
-        maxWidth="md"
-        disablePortal
-        container={() => document.body}
-        style={{ 
-          position: 'fixed', 
-          zIndex: 9999, 
-          top: 0, 
-          left: 0, 
-          width: '100%', 
-          height: '100%', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: 'rgba(0,0,0,0.5)' 
-        }}
-        PaperProps={{
-          style: {
-            minWidth: '500px',
-            maxWidth: '90%',
-            margin: 'auto',
-            backgroundColor: 'white',
-            border: '3px solid red', // Diagnostic border
-            position: 'relative',
-            zIndex: 10000
-          }
-        }}
-      >
-        <DialogTitle>
-          {/* Diagnostic information */}
-          <Typography variant="h6" color="error">
-            Dialog Diagnostic Information
-          </Typography>
-          <Typography variant="body2">
-            Open State: {dialogState.open.toString()}
-            {' | '}
-            Editing ID: {dialogState.editingId ?? 'None'}
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          {/* Minimal content to verify rendering */}
-          <Typography variant="body1" color="primary">
-            This is a test dialog to diagnose rendering issues.
-          </Typography>
-          
-          {/* Original form content */}
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="title"
-                label="Title"
-                fullWidth
-                margin="normal"
-                value={dialogState.formData.title}
-                onChange={handleInputChange}
-                required
-                error={!dialogState.formData.title}
-                helperText={!dialogState.formData.title ? 'Title is required' : ''}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="client"
-                label="Client"
-                fullWidth
-                margin="normal"
-                value={dialogState.formData.client}
-                onChange={handleInputChange}
-                required
-                error={!dialogState.formData.client}
-                helperText={!dialogState.formData.client ? 'Client is required' : ''}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="description"
-                label="Description"
-                fullWidth
-                margin="normal"
-                multiline
-                rows={3}
-                value={dialogState.formData.description}
-                onChange={handleInputChange}
-                required
-                error={!dialogState.formData.description}
-                helperText={!dialogState.formData.description ? 'Description is required' : ''}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="challenge"
-                label="Challenge"
-                fullWidth
-                margin="normal"
-                multiline
-                rows={3}
-                value={dialogState.formData.challenge}
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="solution"
-                label="Solution"
-                fullWidth
-                margin="normal"
-                multiline
-                rows={3}
-                value={dialogState.formData.solution}
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="results"
-                label="Results"
-                fullWidth
-                margin="normal"
-                multiline
-                rows={3}
-                value={dialogState.formData.results}
-                onChange={handleInputChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="imageUrl"
-                label="Image URL"
-                fullWidth
-                margin="normal"
-                value={dialogState.formData.imageUrl}
-                onChange={handleInputChange}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button 
-            onClick={handleClose} 
-            color="secondary"
-          >
-            Close Diagnostic Dialog
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            color="primary" 
-            variant="contained"
-            disabled={!dialogState.formData.title || !dialogState.formData.client || !dialogState.formData.description}
-          >
-            {dialogState.mode === 'edit' ? 'Update' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
 };
 
 export default CaseStudiesManagement;

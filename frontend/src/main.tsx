@@ -8,6 +8,7 @@ import { store } from './store';
 import theme from './theme';
 import App from './App';
 import './index.css';
+import { SnackbarProvider } from 'notistack';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <BrowserRouter>
-          <App />
+          <SnackbarProvider>
+            <App />
+          </SnackbarProvider>
         </BrowserRouter>
       </ThemeProvider>
     </Provider>

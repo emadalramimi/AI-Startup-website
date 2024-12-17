@@ -9,15 +9,20 @@ import {
   useTheme,
   alpha,
   Card,
+  Paper,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Email, Phone, LocationOn } from '@mui/icons-material';
+import { Email, Phone, LocationOn, LinkedIn, Twitter, Facebook, ContentCopy, Send } from '@mui/icons-material';
 
 interface ContactInfo {
   icon: JSX.Element;
   title: string;
   content: string;
+  link?: string;
+  copyable?: boolean;
 }
 
 const Contact = () => {
@@ -30,25 +35,39 @@ const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    subject: '',
     message: '',
   });
 
+  const [copied, setCopied] = useState<string | null>(null);
+
   const contactInfo: ContactInfo[] = [
     {
-      icon: <Email fontSize="large" />,
+      icon: <Email fontSize="large" sx={{ color: theme.palette.primary.main }} />,
       title: 'Email',
-      content: 'contact@sarb.ai',
+      content: 'contact@mantiq.om',
+      copyable: true,
+      link: 'mailto:contact@mantiq.om',
     },
     {
-      icon: <Phone fontSize="large" />,
+      icon: <Phone fontSize="large" sx={{ color: theme.palette.primary.main }} />,
       title: 'Phone',
-      content: '+1 (555) 123-4567',
+      content: '+968 95901821',
+      copyable: true,
+      link: 'tel:+96895901821',
     },
     {
-      icon: <LocationOn fontSize="large" />,
+      icon: <LocationOn fontSize="large" sx={{ color: theme.palette.primary.main }} />,
       title: 'Location',
-      content: 'Silicon Valley, CA',
+      content: 'Muscat, Oman',
+      link: 'https://maps.google.com/?q=Muscat,Oman',
     },
+  ];
+
+  const socialLinks = [
+    { icon: <LinkedIn />, name: 'LinkedIn', link: '#' },
+    { icon: <Twitter />, name: 'Twitter', link: '#' },
+    { icon: <Facebook />, name: 'Facebook', link: '#' },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,13 +83,20 @@ const Contact = () => {
     });
   };
 
+  const handleCopy = (content: string) => {
+    navigator.clipboard.writeText(content);
+    setCopied(content);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
   return (
     <Box
       sx={{
         minHeight: 'calc(100vh - 64px)',
-        py: 8,
+        py: 12,
         position: 'relative',
         overflow: 'hidden',
+        background: `linear-gradient(180deg, ${alpha(theme.palette.background.default, 0.8)} 0%, ${alpha(theme.palette.background.default, 1)} 100%)`,
       }}
     >
       {/* Background Elements */}
@@ -107,213 +133,217 @@ const Contact = () => {
         }}
       />
 
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="lg">
         <motion.div
           ref={ref}
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6 }}
         >
           <Typography
             variant="h2"
-            component="h1"
             align="center"
             sx={{
               mb: 2,
-              fontWeight: 'bold',
               background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              color: 'transparent',
+              fontWeight: 'bold',
             }}
           >
             Get in Touch
           </Typography>
           <Typography
-            variant="h5"
+            variant="h6"
             align="center"
             color="text.secondary"
-            sx={{ mb: 8, maxWidth: 800, mx: 'auto', opacity: 0.8 }}
+            sx={{ mb: 8 }}
           >
             Have a question or want to work together? We'd love to hear from you.
           </Typography>
-        </motion.div>
 
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={6}>
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card
-                sx={{
-                  p: 4,
-                  height: '100%',
-                  background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.1)}, ${alpha(
-                    theme.palette.background.paper,
-                    0.05
-                  )})`,
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                  borderRadius: '20px',
-                }}
-              >
-                <form onSubmit={handleSubmit}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        variant="outlined"
-                        required
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: alpha(theme.palette.primary.main, 0.3),
-                            },
-                            '&:hover fieldset': {
-                              borderColor: theme.palette.primary.main,
-                            },
-                          },
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        variant="outlined"
-                        required
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: alpha(theme.palette.primary.main, 0.3),
-                            },
-                            '&:hover fieldset': {
-                              borderColor: theme.palette.primary.main,
-                            },
-                          },
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Message"
-                        name="message"
-                        value={formData.message}
-                        onChange={handleChange}
-                        variant="outlined"
-                        required
-                        multiline
-                        rows={4}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '& fieldset': {
-                              borderColor: alpha(theme.palette.primary.main, 0.3),
-                            },
-                            '&:hover fieldset': {
-                              borderColor: theme.palette.primary.main,
-                            },
-                          },
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        size="large"
-                        fullWidth
-                        sx={{
-                          background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                          color: 'white',
-                          py: 1.5,
-                          '&:hover': {
-                            background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                          },
-                        }}
-                      >
-                        Send Message
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </form>
-              </Card>
-            </motion.div>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <Card
-                sx={{
-                  p: 4,
-                  height: '100%',
-                  background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.1)}, ${alpha(
-                    theme.palette.background.paper,
-                    0.05
-                  )})`,
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                  borderRadius: '20px',
-                }}
-              >
-                <Grid container spacing={4}>
-                  {contactInfo.map((info, index) => (
-                    <Grid item xs={12} key={index}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box
+          <Grid container spacing={4} sx={{ mb: 8 }}>
+            {contactInfo.map((info, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.6, delay: index * 0.2 }}
+                >
+                  <Card
+                    sx={{
+                      p: 3,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      background: alpha(theme.palette.background.paper, 0.8),
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: 2,
+                      transition: 'transform 0.3s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-5px)',
+                      },
+                    }}
+                  >
+                    {info.icon}
+                    <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                      {info.title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {info.link ? (
+                        <Typography
+                          component="a"
+                          href={info.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           sx={{
-                            p: 2,
-                            borderRadius: '12px',
-                            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)}, ${alpha(
-                              theme.palette.secondary.main,
-                              0.2
-                            )})`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+                            color: 'text.primary',
+                            textDecoration: 'none',
+                            '&:hover': { color: 'primary.main' },
                           }}
                         >
-                          {info.icon}
-                        </Box>
-                        <Box>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                              WebkitBackgroundClip: 'text',
-                              WebkitTextFillColor: 'transparent',
-                              fontWeight: 'bold',
-                            }}
+                          {info.content}
+                        </Typography>
+                      ) : (
+                        <Typography>{info.content}</Typography>
+                      )}
+                      {info.copyable && (
+                        <Tooltip
+                          title={copied === info.content ? 'Copied!' : 'Copy'}
+                          placement="top"
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => handleCopy(info.content)}
+                            color={copied === info.content ? 'primary' : 'default'}
                           >
-                            {info.title}
-                          </Typography>
-                          <Typography variant="body1" color="text.secondary">
-                            {info.content}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Card>
-            </motion.div>
+                            <ContentCopy fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
           </Grid>
-        </Grid>
+
+          <Paper
+            component={motion.div}
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            sx={{
+              p: 4,
+              background: alpha(theme.palette.background.paper, 0.8),
+              backdropFilter: 'blur(10px)',
+              borderRadius: 2,
+            }}
+          >
+            <form onSubmit={handleSubmit}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    variant="outlined"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    variant="outlined"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    required
+                    variant="outlined"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Message"
+                    name="message"
+                    multiline
+                    rows={4}
+                    value={formData.message}
+                    onChange={handleChange}
+                    required
+                    variant="outlined"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    endIcon={<Send />}
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 2,
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    }}
+                  >
+                    Send Message
+                  </Button>
+                </Grid>
+              </Grid>
+            </form>
+          </Paper>
+
+          <Box sx={{ mt: 8, textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              Connect With Us
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+              {socialLinks.map((social, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
+                >
+                  <IconButton
+                    component="a"
+                    href={social.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: 'text.primary',
+                      '&:hover': {
+                        color: 'primary.main',
+                        transform: 'translateY(-3px)',
+                      },
+                      transition: 'all 0.3s ease-in-out',
+                    }}
+                  >
+                    {social.icon}
+                  </IconButton>
+                </motion.div>
+              ))}
+            </Box>
+          </Box>
+        </motion.div>
       </Container>
     </Box>
   );

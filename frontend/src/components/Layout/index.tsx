@@ -3,17 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Box,
-  Drawer,
   IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Toolbar,
   Typography,
   useTheme,
   useMediaQuery,
   Button,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -27,6 +24,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
+import amadLogo from '../../assets/Amad logo.png';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -35,7 +33,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -48,111 +46,129 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Contact', icon: <Mail />, path: '/contact' },
   ];
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMobileMenuAnchor(event.currentTarget);
+  };
+
+  const handleMobileMenuClose = () => {
+    setMobileMenuAnchor(null);
   };
 
   const handleNavigation = (path: string) => {
     navigate(path);
-    if (isMobile) {
-      setMobileOpen(false);
-    }
+    handleMobileMenuClose();
   };
 
   const handleLogout = () => {
     dispatch(logout());
     navigate('/');
+    handleMobileMenuClose();
   };
 
-  const drawer = (
-    <Box sx={{ mt: 2 }}>
-      <List>
-        {menuItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => handleNavigation(item.path)}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
-        ))}
-      </List>
-    </Box>
-  );
-
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar position="fixed">
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      minHeight: '100vh',
+      width: '100vw',
+      maxWidth: '100vw',
+      overflow: 'hidden'
+    }}>
+      <AppBar position="fixed" sx={{ background: 'rgba(10, 10, 30, 0.95)', backdropFilter: 'blur(10px)' }}>
         <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
+          {isMobile && (
+            <IconButton
+              color="inherit"
+              aria-label="open menu"
+              edge="start"
+              onClick={handleMobileMenuOpen}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          
+          {/* Logo and Brand */}
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              flexGrow: 1, 
+              cursor: 'pointer' 
+            }}
+            onClick={() => handleNavigation('/')}
           >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Sarb
-          </Typography>
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
-            {menuItems.map((item) => (
-              <Button
-                color="inherit"
-                key={item.text}
-                onClick={() => handleNavigation(item.path)}
-              >
-                {item.text}
-              </Button>
-            ))}
-            {isAuthenticated ? (
-              <Button color="inherit" onClick={handleLogout}>
-                Logout
-              </Button>
-            ) : (
-              <Button
-                color="inherit"
-                onClick={() => handleNavigation('/login')}
-                startIcon={<Login />}
-              >
-                Login
-              </Button>
-            )}
+            <img 
+              src={amadLogo} 
+              alt="Amad Logo" 
+              style={{ 
+                height: '40px', 
+                marginRight: '10px',
+                filter: 'brightness(1.2)' 
+              }} 
+            />
           </Box>
+
+          {!isMobile ? (
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {menuItems.map((item) => (
+                <Button
+                  color="inherit"
+                  key={item.text}
+                  onClick={() => handleNavigation(item.path)}
+                  sx={{
+                    '&:hover': {
+                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }
+                  }}
+                >
+                  {item.text}
+                </Button>
+              ))}
+              {isAuthenticated ? (
+                <Button color="inherit" onClick={handleLogout}>
+                  Logout
+                </Button>
+              ) : (
+                <Button
+                  color="inherit"
+                  onClick={() => handleNavigation('/login')}
+                  startIcon={<Login />}
+                >
+                  Login
+                </Button>
+              )}
+            </Box>
+          ) : (
+            <Menu
+              anchorEl={mobileMenuAnchor}
+              open={Boolean(mobileMenuAnchor)}
+              onClose={handleMobileMenuClose}
+            >
+              {menuItems.map((item) => (
+                <MenuItem key={item.text} onClick={() => handleNavigation(item.path)}>
+                  {item.icon}
+                  <Typography sx={{ ml: 1 }}>{item.text}</Typography>
+                </MenuItem>
+              ))}
+              {isAuthenticated ? (
+                <MenuItem onClick={handleLogout}>
+                  <Login />
+                  <Typography sx={{ ml: 1 }}>Logout</Typography>
+                </MenuItem>
+              ) : (
+                <MenuItem onClick={() => handleNavigation('/login')}>
+                  <Login />
+                  <Typography sx={{ ml: 1 }}>Login</Typography>
+                </MenuItem>
+              )}
+            </Menu>
+          )}
         </Toolbar>
       </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { md: 240 }, flexShrink: { md: 0 } }}
-      >
-        <Drawer
-          variant={isMobile ? 'temporary' : 'permanent'}
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: 240,
-            },
-          }}
-        >
-          {drawer}
-        </Drawer>
-      </Box>
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { md: `calc(100% - 240px)` },
-          mt: 8,
-        }}
-      >
+      <Box component="main" sx={{ flexGrow: 1, mt: '64px' }}>
         {children}
       </Box>
     </Box>
