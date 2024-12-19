@@ -152,11 +152,32 @@ const CaseStudiesManagement: React.FC = () => {
                 Add Case Study
             </Button>
 
-            {loading && <Typography>Loading...</Typography>}
-            {error && <Typography color="error">{error}</Typography>}
+            {loading && <Typography variant="body1">Loading case studies...</Typography>}
+            
+            {error && (
+                <Typography 
+                    variant="body1" 
+                    color="error" 
+                    sx={{ textAlign: 'center', mt: 4 }}
+                >
+                    {typeof error === 'string' 
+                        ? error 
+                        : error?.message || 'An unexpected error occurred'}
+                </Typography>
+            )}
+
+            {!loading && !error && (!caseStudies || caseStudies.length === 0) && (
+                <Typography 
+                    variant="body1" 
+                    color="text.secondary" 
+                    sx={{ textAlign: 'center', mt: 4 }}
+                >
+                    No case studies found. Click "Add Case Study" to get started.
+                </Typography>
+            )}
 
             <Grid container spacing={3}>
-                {caseStudies.map((caseStudy) => (
+                {Array.isArray(caseStudies) && caseStudies.map((caseStudy) => (
                     <Grid item xs={12} md={4} key={caseStudy.id}>
                         <Box sx={{ 
                             border: '1px solid #ddd', 
@@ -164,8 +185,8 @@ const CaseStudiesManagement: React.FC = () => {
                             p: 2, 
                             position: 'relative' 
                         }}>
-                            <Typography variant="h6">{caseStudy.title}</Typography>
-                            <Typography variant="body2">{caseStudy.description}</Typography>
+                            <Typography variant="h6">{caseStudy.title || 'Untitled'}</Typography>
+                            <Typography variant="body2">{caseStudy.description || 'No description'}</Typography>
                             
                             <Box sx={{ 
                                 position: 'absolute', 

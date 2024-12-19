@@ -161,9 +161,33 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
     """
     queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    
+
     def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        # Debug logging
+        print(f"Current action: {self.action}")
+        print(f"User authenticated: {self.request.user.is_authenticated}")
+        print(f"User: {self.request.user}")
+        print(f"Request headers: {self.request.headers}")
+
         if self.action == 'create':
-            return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+    def list(self, request, *args, **kwargs):
+        # Additional debug logging for list method
+        print(f"List method called by user: {request.user}")
+        print(f"User is authenticated: {request.user.is_authenticated}")
+        
+        # Check if the user is staff or superuser
+        if not request.user.is_staff and not request.user.is_superuser:
+            return Response(
+                {"detail": "Only staff or superusers can list contact messages."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        return super().list(request, *args, **kwargs)

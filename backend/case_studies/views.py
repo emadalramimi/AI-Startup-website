@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from .models import CaseStudy
 from .serializers import CaseStudySerializer
@@ -15,8 +15,17 @@ from rest_framework import serializers
 class CaseStudyViewSet(viewsets.ModelViewSet):
     queryset = CaseStudy.objects.all()
     serializer_class = CaseStudySerializer
-    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
         try:

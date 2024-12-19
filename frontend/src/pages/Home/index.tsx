@@ -7,55 +7,123 @@ import Lottie from 'lottie-react';
 import ParticlesBackground from '../../components/ParticlesBackground';
 import Testimonials from '../../components/Testimonials';
 import aiAnimation from '../../assets/ai-animation.json';
-import { Canvas, useFrame, extend } from '@react-three/fiber';
-import { OrbitControls, Text, Line } from '@react-three/drei';
-import * as THREE from 'three';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
+import Globe from 'globe.gl';
+import { scaleSequential } from 'd3-scale';
+import { interpolateYlOrRd } from 'd3-scale-chromatic';
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { AIDevelopmentIcon, MachineLearningIcon, ComputerVisionIcon, NLPIcon } from '../../components/Icons3D';
 
-extend({ TextGeometry });
-
-const GlobeVisualization = () => {
-  return (
-    <Canvas>
-      <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
-      <Sphere args={[1, 64, 64]}>
-        <meshStandardMaterial
-          color="#ffffff"
-          wireframe
-          transparent
-          opacity={0.3}
-        />
-      </Sphere>
-    </Canvas>
-  );
+const DEFAULT_POINT = {
+  lat: 22.5880,
+  lng: 58.3829,
+  size: 0.7,
+  color: '#FFD700',
 };
 
-const SkillBar = ({ skill, value, color }: { skill: string; value: number; color: string }) => {
+const useGlobe = (globeEl, countries) => {
+  useEffect(() => {
+    if (!globeEl || countries.features.length === 0) return;
+
+    const globe = Globe()
+      .globeImageUrl('')
+      .backgroundColor('rgba(0,0,0,0)')
+      .showGlobe(true)
+      .showAtmosphere(true)
+      .atmosphereColor('#7c4dff')
+      .atmosphereAltitude(0.1)
+      .hexPolygonsData(countries.features)
+      .hexPolygonResolution(3)
+      .hexPolygonMargin(0.3)
+      .hexPolygonColor(() => '#2a3eb1')
+      .hexPolygonAltitude(0.01)
+      .pointsData([DEFAULT_POINT])
+      .pointAltitude(0.02)
+      .pointColor('color')
+      .pointRadius('size')
+      .pointsMerge(true)
+      (globeEl);
+
+    // Auto-rotate and controls
+    const controls = globe.controls();
+    Object.assign(controls, {
+      autoRotate: true,
+      autoRotateSpeed: 0.5,
+      enableZoom: false,
+      minDistance: 300,
+      maxDistance: 300,
+    });
+
+    globe.pointOfView({ ...DEFAULT_POINT, altitude: 1.0 });
+
+    return () => {
+      globeEl.innerHTML = '';
+    };
+  }, [globeEl, countries]);
+};
+
+const GlobeVisualization = () => {
+  const globeEl = useRef<HTMLDivElement>(null);
+  const [countries, setCountries] = useState({ features: [] });
   const theme = useTheme();
+
+  useEffect(() => {
+    fetch(
+      'https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson'
+    )
+      .then((res) => res.json())
+      .then(setCountries);
+  }, []);
+
+  useGlobe(globeEl.current, countries);
+
   return (
-    <Box sx={{ mb: 3 }}>
-      <Typography variant="subtitle1" sx={{ mb: 1 }}>{skill}</Typography>
-      <LinearProgress
-        variant="determinate"
-        value={value}
+    <motion.div
+      initial={{ 
+        opacity: 0, 
+        scale: 0.6,
+        rotate: -20,
+        filter: 'blur(10px)'
+      }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1,
+        rotate: 0,
+        filter: 'blur(0px)'
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 70,
+        damping: 15,
+        duration: 1,
+      }}
+      style={{
+        width: '100%',
+        height: '100%',
+        perspective: '1000px',
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      <Box
+        ref={globeEl}
         sx={{
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: alpha(color, 0.1),
-          '& .MuiLinearProgress-bar': {
-            borderRadius: 4,
-            background: `linear-gradient(90deg, ${color}, ${theme.palette.secondary.main})`,
+          width: '100%',
+          height: '100%',
+          transition: 'all 0.5s ease-in-out',
+          '& > div': {
+            width: '100% !important',
+            height: '100% !important',
+          },
+          '& canvas': {
+            outline: 'none',
+            boxShadow: `0 15px 50px ${alpha(theme.palette.primary.main, 0.2)}`,
+            borderRadius: '50%',
           },
         }}
       />
-    </Box>
+    </motion.div>
   );
 };
+
 
 const ProcessStep = ({ number, title, description, isLast = false }: { number: string; title: string; description: string; isLast?: boolean }) => {
   const theme = useTheme();
@@ -146,133 +214,25 @@ const ProcessStep = ({ number, title, description, isLast = false }: { number: s
   );
 };
 
-const BrainModel = () => {
+const SkillBar = ({ skill, value, color }: { skill: string; value: number; color: string }) => {
   const theme = useTheme();
-  const groupRef = useRef<THREE.Group>(null);
-  const cubeRef = useRef<THREE.Mesh>(null);
-  const [binaryParticles, setBinaryParticles] = useState<{ position: [number, number, number], value: string, speed: number }[]>([]);
-  const [gridPoints, setGridPoints] = useState<[number, number, number][]>([]);
-
-  useEffect(() => {
-    // Create grid points for the cube surface
-    const points: [number, number, number][] = [];
-    const size = 2;
-    const density = 5;
-    const step = size / density;
-
-    // Create points on each face of the cube
-    for (let i = 0; i <= density; i++) {
-      for (let j = 0; j <= density; j++) {
-        // Front and back faces
-        points.push([i * step - size/2, j * step - size/2, size/2]);
-        points.push([i * step - size/2, j * step - size/2, -size/2]);
-        // Left and right faces
-        points.push([size/2, i * step - size/2, j * step - size/2]);
-        points.push([-size/2, i * step - size/2, j * step - size/2]);
-        // Top and bottom faces
-        points.push([i * step - size/2, size/2, j * step - size/2]);
-        points.push([i * step - size/2, -size/2, j * step - size/2]);
-      }
-    }
-
-    setGridPoints(points);
-
-    // Create floating binary numbers with varying speeds
-    const newBinaryParticles = [];
-    for (let i = 0; i < 80; i++) { // Increased to 80 particles
-      newBinaryParticles.push({
-        position: [
-          (Math.random() - 0.5) * 12, // Increased spread
-          (Math.random() - 0.5) * 12,
-          (Math.random() - 0.5) * 12
-        ] as [number, number, number],
-        value: Math.random() > 0.5 ? '1' : '0',
-        speed: 0.005 + Math.random() * 0.015 // Random speed for each particle
-      });
-    }
-    setBinaryParticles(newBinaryParticles);
-  }, []);
-
-  useFrame(({ clock }) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += 0.002;
-      if (cubeRef.current) {
-        cubeRef.current.scale.x = 1 + Math.sin(clock.getElapsedTime() * 2) * 0.05;
-        cubeRef.current.scale.y = 1 + Math.sin(clock.getElapsedTime() * 2) * 0.05;
-        cubeRef.current.scale.z = 1 + Math.sin(clock.getElapsedTime() * 2) * 0.05;
-      }
-    }
-
-    setBinaryParticles(prev => prev.map(particle => ({
-      ...particle,
-      position: [
-        particle.position[0],
-        particle.position[1] + particle.speed, // Use individual particle speed
-        particle.position[2]
-      ] as [number, number, number]
-    })).map(particle => 
-      particle.position[1] > 6 ? { // Increased height before reset
-        ...particle,
-        position: [
-          (Math.random() - 0.5) * 12,
-          -6,
-          (Math.random() - 0.5) * 12
-        ] as [number, number, number]
-      } : particle
-    ));
-  });
-
   return (
-    <group ref={groupRef}>
-      {/* Main Cube */}
-      <mesh ref={cubeRef}>
-        <boxGeometry args={[2, 2, 2]} />
-        <meshPhongMaterial
-          color={theme.palette.primary.main}
-          transparent
-          opacity={0.1}
-          shininess={100}
-        />
-      </mesh>
-
-      {/* Grid Points on Cube Surface */}
-      {gridPoints.map((point, index) => (
-        <mesh key={`grid-${index}`} position={point}>
-          <sphereGeometry args={[0.03, 8, 8]} />
-          <meshPhongMaterial
-            color={theme.palette.primary.main}
-            emissive={theme.palette.primary.main}
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-      ))}
-
-      {/* Floating Binary Numbers */}
-      {binaryParticles.map((particle, index) => (
-        <Text
-          key={`binary-${index}`}
-          position={particle.position}
-          fontSize={0.3}
-          color="rgb(100, 183, 233)"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {particle.value}
-        </Text>
-      ))}
-    </group>
-  );
-};
-
-const NeuralNetwork = () => {
-  return (
-    <Canvas camera={{ position: [0, 0, 10], fov: 50 }}>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1} />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} />
-      <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
-      <BrainModel />
-    </Canvas>
+    <Box sx={{ mb: 3 }}>
+      <Typography variant="subtitle1" sx={{ mb: 1 }}>{skill}</Typography>
+      <LinearProgress
+        variant="determinate"
+        value={value}
+        sx={{
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: alpha(color, 0.1),
+          '& .MuiLinearProgress-bar': {
+            borderRadius: 4,
+            background: `linear-gradient(90deg, ${color}, ${theme.palette.secondary.main})`,
+          },
+        }}
+      />
+    </Box>
   );
 };
 
@@ -382,7 +342,7 @@ const Home = () => {
         <motion.div
           style={{
             position: 'absolute',
-            bottom: '10%',
+            bottom: '15%',
             right: '5%',
             width: '400px',
             height: '400px',
@@ -468,13 +428,26 @@ const Home = () => {
             </Grid>
             <Grid item xs={12} md={6}>
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={heroInView ? { opacity: 1, scale: 1 } : {}}
-                transition={{ duration: 0.8, delay: 0.2 }}
+                style={{
+                  position: 'absolute',
+                  bottom: '120%',
+                  right: '74%',
+                  width: '100px',  
+                  height: '100px', 
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ 
+                  type: 'spring', 
+                  stiffness: 100, 
+                  damping: 10,
+                  delay: 0.2
+                }}
               >
-                <Box sx={{ height: 500, width: '100%' }}>
-                  <NeuralNetwork />
-                </Box>
+                <GlobeVisualization />
               </motion.div>
             </Grid>
           </Grid>

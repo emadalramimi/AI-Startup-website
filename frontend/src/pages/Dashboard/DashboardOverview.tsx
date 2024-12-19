@@ -167,7 +167,8 @@ const ProgressSection: React.FC = () => (
 );
 
 const DashboardOverview: React.FC = () => {
-  const team = useSelector((state: RootState) => state.team.teamMembers);
+  // Get team members from Redux store
+  const { teamMembers } = useSelector((state: RootState) => state.team);
   const services = useSelector((state: RootState) => state.services.services);
   const caseStudies = useSelector((state: RootState) => state.caseStudies.caseStudies);
 
@@ -179,7 +180,7 @@ const DashboardOverview: React.FC = () => {
       <Grid container spacing={3}>
         <StatCard
           title="Team Members"
-          count={team.length}
+          count={teamMembers?.length || 0}
           icon={<PeopleIcon fontSize="large" />}
           link="/dashboard/team"
           color="#1976d2"

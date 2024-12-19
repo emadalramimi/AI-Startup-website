@@ -61,7 +61,7 @@ const NotificationsMenu: React.FC = () => {
   };
 
   return (
-    <>
+    <Box component="div">
       <IconButton color="inherit" onClick={handleClick}>
         <Badge badgeContent={unreadCount} color="error">
           <NotificationsIcon />
@@ -89,56 +89,58 @@ const NotificationsMenu: React.FC = () => {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6">Notifications</Typography>
-          <Button size="small" onClick={handleMarkAllAsRead}>
-            Mark all as read
-          </Button>
-        </Box>
-        <Divider />
-        {notifications.length === 0 ? (
-          <MenuItem disabled>
-            <Typography variant="body2" color="text.secondary">
-              No notifications
-            </Typography>
-          </MenuItem>
-        ) : (
-          <>
-            {notifications.map((notification) => (
-              <MenuItem
-                key={notification.id}
-                onClick={() => handleMarkAsRead(notification.id)}
-                sx={{
-                  backgroundColor: notification.read ? 'transparent' : 'action.hover',
-                  opacity: notification.read ? 0.7 : 1,
-                }}
-              >
-                <ListItemIcon>{getNotificationIcon(notification.type)}</ListItemIcon>
-                <ListItemText
-                  primary={notification.title}
-                  secondary={
-                    <React.Fragment>
-                      <Typography variant="body2" component="span" display="block">
-                        {notification.message}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
-                      </Typography>
-                    </React.Fragment>
-                  }
-                />
-              </MenuItem>
-            ))}
-            <Divider />
-            <Box sx={{ p: 1, display: 'flex', justifyContent: 'center' }}>
-              <Button size="small" onClick={handleClearAll} color="error">
-                Clear all
-              </Button>
+        {[
+          <Box key="header" sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Notifications</Typography>
+            <Button size="small" onClick={handleMarkAllAsRead}>
+              Mark all as read
+            </Button>
+          </Box>,
+          <Divider key="divider-1" />,
+          notifications.length === 0 ? (
+            <MenuItem key="no-notifications" disabled>
+              <Typography variant="body2" color="text.secondary">
+                No notifications
+              </Typography>
+            </MenuItem>
+          ) : (
+            <Box key="notifications-list">
+              {notifications.map((notification) => (
+                <MenuItem
+                  key={notification.id}
+                  onClick={() => handleMarkAsRead(notification.id)}
+                  sx={{
+                    backgroundColor: notification.read ? 'transparent' : 'action.hover',
+                    opacity: notification.read ? 0.7 : 1,
+                  }}
+                >
+                  <ListItemIcon>{getNotificationIcon(notification.type)}</ListItemIcon>
+                  <ListItemText
+                    primary={notification.title}
+                    secondary={
+                      <Box>
+                        <Typography variant="body2" component="span" display="block">
+                          {notification.message}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </MenuItem>
+              ))}
+              <Divider />
+              <Box sx={{ p: 1, display: 'flex', justifyContent: 'center' }}>
+                <Button size="small" onClick={handleClearAll} color="error">
+                  Clear all
+                </Button>
+              </Box>
             </Box>
-          </>
-        )}
+          )
+        ]}
       </Menu>
-    </>
+    </Box>
   );
 };
 

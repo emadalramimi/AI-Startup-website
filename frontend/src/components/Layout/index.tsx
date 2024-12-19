@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -19,29 +19,24 @@ import {
   Cases,
   People,
   Mail,
-  Login,
+  SmartToy,
 } from '@mui/icons-material';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
-import { logout } from '../../store/slices/authSlice';
 import amadLogo from '../../assets/Amad logo.png';
 
 interface LayoutProps {
-  children: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   const menuItems = [
     { text: 'Home', icon: <Home />, path: '/' },
     { text: 'Services', icon: <Business />, path: '/services' },
     { text: 'Case Studies', icon: <Cases />, path: '/case-studies' },
+    { text: 'AI Demos', icon: <SmartToy />, path: '/ai-demos' },
     { text: 'Team', icon: <People />, path: '/team' },
     { text: 'Contact', icon: <Mail />, path: '/contact' },
   ];
@@ -56,12 +51,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
-    handleMobileMenuClose();
-  };
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
     handleMobileMenuClose();
   };
 
@@ -127,19 +116,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   {item.text}
                 </Button>
               ))}
-              {isAuthenticated ? (
-                <Button color="inherit" onClick={handleLogout}>
-                  Logout
-                </Button>
-              ) : (
-                <Button
-                  color="inherit"
-                  onClick={() => handleNavigation('/login')}
-                  startIcon={<Login />}
-                >
-                  Login
-                </Button>
-              )}
             </Box>
           ) : (
             <Menu
@@ -153,23 +129,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Typography sx={{ ml: 1 }}>{item.text}</Typography>
                 </MenuItem>
               ))}
-              {isAuthenticated ? (
-                <MenuItem onClick={handleLogout}>
-                  <Login />
-                  <Typography sx={{ ml: 1 }}>Logout</Typography>
-                </MenuItem>
-              ) : (
-                <MenuItem onClick={() => handleNavigation('/login')}>
-                  <Login />
-                  <Typography sx={{ ml: 1 }}>Login</Typography>
-                </MenuItem>
-              )}
             </Menu>
           )}
         </Toolbar>
       </AppBar>
       <Box component="main" sx={{ flexGrow: 1, mt: '64px' }}>
-        {children}
+        <Outlet />
       </Box>
     </Box>
   );

@@ -32,9 +32,14 @@ export const fetchCaseStudies = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get('/case-studies/');
-      return response.data;
+      return response.data.results || response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'An error occurred');
+      console.error('Fetch Case Studies Error:', error);
+      return rejectWithValue({
+        message: error.response?.data?.detail || 'Failed to fetch case studies',
+        status: error.response?.status,
+        details: error.response?.data
+      });
     }
   }
 );

@@ -34,7 +34,8 @@ urlpatterns = [
     path('', IndexView.as_view(), name='index'),
     path('admin/', admin.site.urls),
     path('api/', include('sarb_api.urls')),
-    path('api/', include('case_studies.urls')),  
+    path('api/', include('case_studies.urls')),
+    path('api/agriculture/', include('agriculture.urls')),
     path('api-auth/', include('rest_framework.urls')),
     
     # JWT Authentication

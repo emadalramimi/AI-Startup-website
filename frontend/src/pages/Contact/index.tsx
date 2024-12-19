@@ -16,6 +16,8 @@ import {
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Email, Phone, LocationOn, LinkedIn, Twitter, Facebook, ContentCopy, Send } from '@mui/icons-material';
+import { api } from '../../services/api';
+import { useSnackbar } from 'notistack';
 
 interface ContactInfo {
   icon: JSX.Element;
@@ -27,6 +29,7 @@ interface ContactInfo {
 
 const Contact = () => {
   const theme = useTheme();
+  const { enqueueSnackbar } = useSnackbar();
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -35,10 +38,11 @@ const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: '',
+    company: '',
     message: '',
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
   const contactInfo: ContactInfo[] = [
@@ -70,13 +74,23 @@ const Contact = () => {
     { icon: <Facebook />, name: 'Facebook', link: '#' },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log(formData);
+    setIsSubmitting(true);
+
+    try {
+      await api.post('/contact/', formData);
+      setFormData({ name: '', email: '', company: '', message: '' });
+      enqueueSnackbar('Message sent successfully!', { variant: 'success' });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      enqueueSnackbar('Failed to send message. Please try again.', { variant: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -242,73 +256,93 @@ const Contact = () => {
               borderRadius: 2,
             }}
           >
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{
+                mt: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
+              }}
+            >
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
                   <TextField
+                    required
                     fullWidth
                     label="Name"
                     name="name"
                     value={formData.name}
-                    onChange={handleChange}
-                    required
-                    variant="outlined"
+                    onChange={handleInputChange}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} md={6}>
                   <TextField
+                    required
                     fullWidth
                     label="Email"
                     name="email"
                     type="email"
                     value={formData.email}
-                    onChange={handleChange}
-                    required
-                    variant="outlined"
+                    onChange={handleInputChange}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label="Subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    variant="outlined"
+                    label="Company (Optional)"
+                    name="company"
+                    value={formData.company}
+                    onChange={handleInputChange}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
+                    required
                     fullWidth
                     label="Message"
                     name="message"
                     multiline
                     rows={4}
                     value={formData.message}
-                    onChange={handleChange}
-                    required
-                    variant="outlined"
+                    onChange={handleInputChange}
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    endIcon={<Send />}
-                    sx={{
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: 2,
-                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                    }}
-                  >
-                    Send Message
-                  </Button>
-                </Grid>
               </Grid>
-            </form>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={isSubmitting}
+                endIcon={<Send />}
+                sx={{
+                  mt: 2,
+                  alignSelf: 'flex-start',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: `linear-gradient(120deg, ${alpha(theme.palette.primary.main, 0)} 0%, ${alpha(
+                      theme.palette.primary.main,
+                      0.2
+                    )} 50%, ${alpha(theme.palette.primary.main, 0)} 100%)`,
+                    transform: 'translateX(-100%)',
+                    transition: 'transform 0.3s ease-in-out',
+                  },
+                  '&:hover::after': {
+                    transform: 'translateX(100%)',
+                  },
+                }}
+              >
+                {isSubmitting ? 'Sending...' : 'Send Message'}
+              </Button>
+            </Box>
           </Paper>
 
           <Box sx={{ mt: 8, textAlign: 'center' }}>

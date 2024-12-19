@@ -13,15 +13,9 @@ export const api = axios.create({
 // Add a request interceptor to add the JWT token
 api.interceptors.request.use(
   (config) => {
-    // Public endpoints that don't require authentication
-    const publicEndpoints = ['/case-studies/'];
-    const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
-    
-    if (!isPublicEndpoint) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -42,11 +36,7 @@ api.interceptors.response.use(
       headers: error.config?.headers
     });
 
-    // Only redirect to login for non-public endpoints
-    const publicEndpoints = ['/case-studies/'];
-    const isPublicEndpoint = publicEndpoints.some(endpoint => error.config?.url?.includes(endpoint));
-    
-    if (error.response?.status === 401 && !isPublicEndpoint) {
+    if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }

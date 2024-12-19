@@ -21,6 +21,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import BusinessIcon from '@mui/icons-material/Business';
 import CaseIcon from '@mui/icons-material/Work';
+import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsMenu from './NotificationsMenu';
 import UserProfileMenu from './UserProfileMenu';
@@ -36,6 +37,7 @@ const menuItems = [
   { text: 'Team', icon: <PeopleIcon />, path: '/dashboard/team' },
   { text: 'Services', icon: <BusinessIcon />, path: '/dashboard/services' },
   { text: 'Case Studies', icon: <CaseIcon />, path: '/dashboard/case-studies' },
+  { text: 'Messages', icon: <EmailIcon />, path: '/dashboard/messages' },
 ];
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
