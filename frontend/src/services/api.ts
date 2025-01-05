@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { TeamMember, Service, CaseStudy } from '../types';
+import { TeamMember, Service } from '../types';
 
 const API_URL = 'http://localhost:8000/api';
 
@@ -121,35 +121,6 @@ export const updateService = (id: number, data: any) => {
 
 export const deleteService = (id: number) => {
   return api.delete(`/services/${id}/`);
-};
-
-// Case Studies API Methods
-export const getCaseStudies = () => {
-  return api.get<PaginatedResponse<CaseStudy>>('/case-studies/');
-};
-
-export const createCaseStudy = (data: FormData) => {
-  return api.post<CaseStudy>('/case-studies/', data, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
-};
-
-export const updateCaseStudy = (id: number, data: FormData) => {
-  return api.patch<CaseStudy>(`/case-studies/${id}/`, data, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
-};
-
-export const deleteCaseStudy = (id: number) => {
-  return api.delete(`/case-studies/${id}/`);
-};
-
-export const getCaseStudy = (id: number) => {
-  return api.get<CaseStudy>(`/case-studies/${id}/`);
 };
 
 // Contact Form API Methods

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   AppBar,
   Box,
@@ -11,17 +12,15 @@ import {
   Button,
   Menu,
   MenuItem,
+  Select,
+  FormControl,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  Home,
-  Business,
-  Cases,
-  People,
-  Mail,
-  SmartToy,
+  Language,
 } from '@mui/icons-material';
-import amadLogo from '../../assets/Amad logo.png';
+import amadLogoEn from '../../assets/logo_en.png';
+import amadLogoAr from '../../assets/logo_ar.png';
 
 interface LayoutProps {
 }
@@ -31,14 +30,13 @@ const Layout: React.FC<LayoutProps> = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
 
   const menuItems = [
-    { text: 'Home', icon: <Home />, path: '/' },
-    { text: 'Services', icon: <Business />, path: '/services' },
-    { text: 'Case Studies', icon: <Cases />, path: '/case-studies' },
-    { text: 'AI Demos', icon: <SmartToy />, path: '/ai-demos' },
-    { text: 'Team', icon: <People />, path: '/team' },
-    { text: 'Contact', icon: <Mail />, path: '/contact' },
+    { text: t('navigation.home'), path: '/' },
+    { text: t('navigation.services'), path: '/services' },
+    { text: t('navigation.pricing'), path: '/pricing' },
+    { text: t('navigation.contact'), path: '/contact' },
   ];
 
   const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -54,6 +52,12 @@ const Layout: React.FC<LayoutProps> = () => {
     handleMobileMenuClose();
   };
 
+  const handleLanguageChange = (event: any) => {
+    const newLang = event.target.value;
+    i18n.changeLanguage(newLang);
+    document.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+  };
+
   return (
     <Box sx={{ 
       display: 'flex', 
@@ -63,8 +67,17 @@ const Layout: React.FC<LayoutProps> = () => {
       maxWidth: '100vw',
       overflow: 'hidden'
     }}>
-      <AppBar position="fixed" sx={{ background: 'rgba(10, 10, 30, 0.95)', backdropFilter: 'blur(10px)' }}>
-        <Toolbar>
+      <AppBar 
+        position="fixed" 
+        sx={{ 
+          background: '#091927', 
+          height: '80px',
+          display: 'flex',
+          justifyContent: 'center',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <Toolbar sx={{ height: '100%' }}>
           {isMobile && (
             <IconButton
               color="inherit"
@@ -77,63 +90,133 @@ const Layout: React.FC<LayoutProps> = () => {
             </IconButton>
           )}
           
-          {/* Logo and Brand */}
           <Box 
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
               flexGrow: 1, 
-              cursor: 'pointer' 
+              cursor: 'pointer',
+              height: '100%',
             }}
             onClick={() => handleNavigation('/')}
           >
             <img 
-              src={amadLogo} 
+              src={i18n.language === 'ar' ? amadLogoAr : amadLogoEn} 
               alt="Amad Logo" 
               style={{ 
-                height: '40px', 
-                marginRight: '10px',
-                filter: 'brightness(1.2)' 
-              }} 
+                height: '50px',
+                marginRight: '16px',
+              }}
             />
           </Box>
 
-          {!isMobile ? (
-            <Box sx={{ display: 'flex', gap: 2 }}>
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {menuItems.map((item) => (
                 <Button
+                  key={item.path}
                   color="inherit"
-                  key={item.text}
                   onClick={() => handleNavigation(item.path)}
                   sx={{
+                    fontSize: '1rem',
+                    textTransform: 'none',
                     '&:hover': {
-                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }
+                      background: 'rgba(255, 255, 255, 0.1)',
+                    },
                   }}
                 >
                   {item.text}
                 </Button>
               ))}
+              
+              {/* Language Selector */}
+              <FormControl 
+                size="small" 
+                sx={{ 
+                  minWidth: 100,
+                  marginLeft: 2,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'white',
+                    },
+                  },
+                  '& .MuiSelect-icon': {
+                    color: 'white',
+                  },
+                }}
+              >
+                <Select
+                  value={i18n.language}
+                  onChange={handleLanguageChange}
+                  displayEmpty
+                  variant="outlined"
+                  sx={{ color: 'white' }}
+                  IconComponent={Language}
+                >
+                  <MenuItem value="en">EN</MenuItem>
+                  <MenuItem value="ar">AR</MenuItem>
+                </Select>
+              </FormControl>
             </Box>
-          ) : (
-            <Menu
-              anchorEl={mobileMenuAnchor}
-              open={Boolean(mobileMenuAnchor)}
-              onClose={handleMobileMenuClose}
-            >
-              {menuItems.map((item) => (
-                <MenuItem key={item.text} onClick={() => handleNavigation(item.path)}>
-                  {item.icon}
-                  <Typography sx={{ ml: 1 }}>{item.text}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
           )}
+
+          {/* Mobile Menu */}
+          <Menu
+            anchorEl={mobileMenuAnchor}
+            open={Boolean(mobileMenuAnchor)}
+            onClose={handleMobileMenuClose}
+            sx={{
+              '& .MuiPaper-root': {
+                backgroundColor: theme.palette.background.paper,
+                minWidth: 200,
+              },
+            }}
+          >
+            {menuItems.map((item) => (
+              <MenuItem
+                key={item.path}
+                onClick={() => handleNavigation(item.path)}
+                sx={{
+                  gap: 2,
+                  py: 1.5,
+                }}
+              >
+                <Typography>{item.text}</Typography>
+              </MenuItem>
+            ))}
+            <MenuItem>
+              <FormControl fullWidth>
+                <Select
+                  value={i18n.language}
+                  onChange={handleLanguageChange}
+                  displayEmpty
+                  variant="outlined"
+                  startAdornment={<Language sx={{ mr: 1 }} />}
+                >
+                  <MenuItem value="en">EN</MenuItem>
+                  <MenuItem value="ar">AR</MenuItem>
+                </Select>
+              </FormControl>
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
-      <Box component="main" sx={{ flexGrow: 1, mt: '64px' }}>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          width: '100%',
+          marginTop: '80px',
+        }}
+      >
         <Outlet />
       </Box>
     </Box>

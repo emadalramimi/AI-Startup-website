@@ -1,129 +1,13 @@
-import { Box, Container, Typography, Button, Grid, useTheme, alpha, LinearProgress, Paper } from '@mui/material';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { Box, Container, Typography, Button, Grid, useTheme, alpha, LinearProgress } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Link as RouterLink } from 'react-router-dom';
-import { ArrowForward, Speed, Psychology, DataObject, Cloud, Security, Code, CodeRounded, PsychologyRounded, VisibilityRounded, ChatRounded } from '@mui/icons-material';
-import Lottie from 'lottie-react';
+import { ArrowForward, Language, AutoAwesome, Psychology, Speed } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import ParticlesBackground from '../../components/ParticlesBackground';
 import Testimonials from '../../components/Testimonials';
-import aiAnimation from '../../assets/ai-animation.json';
-import Globe from 'globe.gl';
-import { scaleSequential } from 'd3-scale';
-import { interpolateYlOrRd } from 'd3-scale-chromatic';
-import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { AIDevelopmentIcon, MachineLearningIcon, ComputerVisionIcon, NLPIcon } from '../../components/Icons3D';
-
-const DEFAULT_POINT = {
-  lat: 22.5880,
-  lng: 58.3829,
-  size: 0.7,
-  color: '#FFD700',
-};
-
-const useGlobe = (globeEl, countries) => {
-  useEffect(() => {
-    if (!globeEl || countries.features.length === 0) return;
-
-    const globe = Globe()
-      .globeImageUrl('')
-      .backgroundColor('rgba(0,0,0,0)')
-      .showGlobe(true)
-      .showAtmosphere(true)
-      .atmosphereColor('#7c4dff')
-      .atmosphereAltitude(0.1)
-      .hexPolygonsData(countries.features)
-      .hexPolygonResolution(3)
-      .hexPolygonMargin(0.3)
-      .hexPolygonColor(() => '#2a3eb1')
-      .hexPolygonAltitude(0.01)
-      .pointsData([DEFAULT_POINT])
-      .pointAltitude(0.02)
-      .pointColor('color')
-      .pointRadius('size')
-      .pointsMerge(true)
-      (globeEl);
-
-    // Auto-rotate and controls
-    const controls = globe.controls();
-    Object.assign(controls, {
-      autoRotate: true,
-      autoRotateSpeed: 0.5,
-      enableZoom: false,
-      minDistance: 300,
-      maxDistance: 300,
-    });
-
-    globe.pointOfView({ ...DEFAULT_POINT, altitude: 1.0 });
-
-    return () => {
-      globeEl.innerHTML = '';
-    };
-  }, [globeEl, countries]);
-};
-
-const GlobeVisualization = () => {
-  const globeEl = useRef<HTMLDivElement>(null);
-  const [countries, setCountries] = useState({ features: [] });
-  const theme = useTheme();
-
-  useEffect(() => {
-    fetch(
-      'https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson'
-    )
-      .then((res) => res.json())
-      .then(setCountries);
-  }, []);
-
-  useGlobe(globeEl.current, countries);
-
-  return (
-    <motion.div
-      initial={{ 
-        opacity: 0, 
-        scale: 0.6,
-        rotate: -20,
-        filter: 'blur(10px)'
-      }}
-      animate={{ 
-        opacity: 1, 
-        scale: 1,
-        rotate: 0,
-        filter: 'blur(0px)'
-      }}
-      transition={{
-        type: 'spring',
-        stiffness: 70,
-        damping: 15,
-        duration: 1,
-      }}
-      style={{
-        width: '100%',
-        height: '100%',
-        perspective: '1000px',
-        transformStyle: 'preserve-3d',
-      }}
-    >
-      <Box
-        ref={globeEl}
-        sx={{
-          width: '100%',
-          height: '100%',
-          transition: 'all 0.5s ease-in-out',
-          '& > div': {
-            width: '100% !important',
-            height: '100% !important',
-          },
-          '& canvas': {
-            outline: 'none',
-            boxShadow: `0 15px 50px ${alpha(theme.palette.primary.main, 0.2)}`,
-            borderRadius: '50%',
-          },
-        }}
-      />
-    </motion.div>
-  );
-};
-
+import ImageCarousel from '../../components/ImageCarousel';
 
 const ProcessStep = ({ number, title, description, isLast = false }: { number: string; title: string; description: string; isLast?: boolean }) => {
   const theme = useTheme();
@@ -135,79 +19,92 @@ const ProcessStep = ({ number, title, description, isLast = false }: { number: s
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, x: -20 }}
-      animate={inView ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.5 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: Number(number) * 0.2 }}
     >
       <Box
         sx={{
           position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-start',
-          mb: 4,
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            left: '2.5rem',
-            top: '5rem', 
-            bottom: isLast ? '0' : '-50%',
-            width: '2px',
-            background: isLast ? 'none' : `linear-gradient(to bottom, ${alpha(theme.palette.primary.main, 0.5)}, transparent)`,
-            zIndex: 0,
+          p: 3,
+          borderRadius: 4,
+          background: alpha(theme.palette.background.paper, 0.05),
+          backdropFilter: 'blur(10px)',
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+          transition: 'all 0.3s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-8px)',
+            background: alpha(theme.palette.background.paper, 0.1),
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+            '& .step-number': {
+              transform: 'scale(1.1)',
+              boxShadow: `0 8px 30px ${alpha(theme.palette.primary.main, 0.4)}`,
+            },
           },
         }}
       >
-        <Box
-          sx={{
-            width: '5rem',
-            height: '5rem',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
-            mr: 3,
-            position: 'relative',
-            zIndex: 1,
-            transition: 'all 0.3s ease-in-out',
-            '&:hover': {
-              transform: 'scale(1.1)',
-            },
-          }}
-        >
-          <Typography
-            variant="h4"
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
+          <Box
+            className="step-number"
             sx={{
-              color: 'white',
-              fontWeight: 700,
+              width: 60,
+              height: 60,
+              borderRadius: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
+              position: 'relative',
+              transition: 'all 0.3s ease-in-out',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                inset: -1,
+                borderRadius: '20px',
+                padding: 1,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+              },
             }}
           >
-            {number}
-          </Typography>
-        </Box>
-        <Box sx={{ flex: 1, pt: 0.5 }}>
-          <Typography
-            variant="h5"
-            sx={{
-              mb: 1,
-              fontWeight: 600,
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            {title}
-          </Typography>
-          <Typography
-            color="text.secondary"
-            sx={{
-              lineHeight: 1.6,
-              fontSize: '1.1rem',
-            }}
-          >
-            {description}
-          </Typography>
+            <Typography
+              variant="h4"
+              sx={{
+                color: 'white',
+                fontWeight: 700,
+                textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              }}
+            >
+              {number}
+            </Typography>
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                mb: 1,
+                fontWeight: 600,
+                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              {title}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: alpha(theme.palette.text.secondary, 0.8),
+                lineHeight: 1.7,
+              }}
+            >
+              {description}
+            </Typography>
+          </Box>
         </Box>
       </Box>
     </motion.div>
@@ -216,670 +113,709 @@ const ProcessStep = ({ number, title, description, isLast = false }: { number: s
 
 const SkillBar = ({ skill, value, color }: { skill: string; value: number; color: string }) => {
   const theme = useTheme();
-  return (
-    <Box sx={{ mb: 3 }}>
-      <Typography variant="subtitle1" sx={{ mb: 1 }}>{skill}</Typography>
-      <LinearProgress
-        variant="determinate"
-        value={value}
-        sx={{
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: alpha(color, 0.1),
-          '& .MuiLinearProgress-bar': {
-            borderRadius: 4,
-            background: `linear-gradient(90deg, ${color}, ${theme.palette.secondary.main})`,
-          },
-        }}
-      />
-    </Box>
-  );
-};
-
-const Home = () => {
-  const theme = useTheme();
-  const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 300], [0, 100]);
-  const y2 = useTransform(scrollY, [0, 300], [0, -100]);
-
-  const [heroRef, heroInView] = useInView({
+  const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
 
-  const [featuresRef, featuresInView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-
-  const features = [
-    {
-      icon: <Speed sx={{ fontSize: 40 }} />,
-      title: 'High Performance',
-      description: 'Our AI solutions are optimized for maximum efficiency and speed.',
-    },
-    {
-      icon: <Psychology sx={{ fontSize: 40 }} />,
-      title: 'Advanced AI',
-      description: 'Cutting-edge machine learning algorithms for intelligent decision making.',
-    },
-    {
-      icon: <DataObject sx={{ fontSize: 40 }} />,
-      title: 'Data Analytics',
-      description: 'Transform your data into actionable insights with our analytics tools.',
-    },
-  ];
-
-  const skills = [
-    { name: 'AI Development', value: 95, color: theme.palette.primary.main },
-    { name: 'Machine Learning', value: 90, color: theme.palette.secondary.main },
-    { name: 'Computer Vision', value: 85, color: theme.palette.primary.main },
-    { name: 'Natural Language Processing', value: 88, color: theme.palette.secondary.main },
-  ];
-
-  const process = [
-    {
-      number: '01',
-      title: 'Initial Consultation',
-      description: 'We begin with a thorough consultation to understand your unique challenges, requirements, and business objectives. Our team of experts analyzes your current systems and identifies opportunities for AI integration.',
-    },
-    {
-      number: '02',
-      title: 'Strategic Planning',
-      description: 'Based on our analysis, we develop a comprehensive AI strategy tailored to your needs. This includes detailed technical specifications, timeline, resource allocation, and clear success metrics.',
-    },
-    {
-      number: '03',
-      title: 'Development & Testing',
-      description: 'Our skilled developers build your custom AI solution using cutting-edge technology and best practices. We conduct rigorous testing to ensure reliability, scalability, and optimal performance.',
-    },
-    {
-      number: '04',
-      title: 'Integration & Deployment',
-      description: 'We seamlessly integrate the AI solution into your existing infrastructure, ensuring minimal disruption to your operations. Our team provides comprehensive documentation and training for your staff.',
-    },
-    {
-      number: '05',
-      title: 'Optimization & Support',
-      description: 'Post-deployment, we continuously monitor system performance and collect feedback. Our team provides ongoing support, maintenance, and optimization to ensure your AI solution delivers maximum value.',
-    },
-  ];
-
   return (
-    <Box sx={{ overflow: 'hidden' }}>
-      {/* Particles Background */}
-      <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
-        <ParticlesBackground />
-      </Box>
-
-      {/* Hero Section */}
-      <Box
-        sx={{
-          minHeight: 'calc(100vh - 64px)',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Animated Background Elements */}
-        <motion.div
-          style={{
-            position: 'absolute',
-            top: '10%',
-            left: '5%',
-            width: '500px',
-            height: '500px',
-            borderRadius: '50%',
-            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)}, ${alpha(
-              theme.palette.secondary.main,
-              0.2
-            )})`,
-            filter: 'blur(100px)',
-            y: y1,
+    <Box sx={{ mb: 4 }} ref={ref}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        mb: 1.5,
+        alignItems: 'center'
+      }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 500,
+            color: 'text.primary',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              color: color,
+              transform: 'translateX(8px)',
+            }
           }}
-        />
-        <motion.div
-          style={{
-            position: 'absolute',
-            bottom: '15%',
-            right: '5%',
-            width: '400px',
-            height: '400px',
-            borderRadius: '50%',
-            background: `linear-gradient(135deg, ${alpha(theme.palette.secondary.main, 0.2)}, ${alpha(
-              theme.palette.primary.main,
-              0.2
-            )})`,
-            filter: 'blur(100px)',
-            y: y2,
+        >
+          {skill}
+        </Typography>
+        <Box
+          sx={{
+            backgroundColor: alpha(color, 0.1),
+            px: 2,
+            py: 0.5,
+            borderRadius: 5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
           }}
-        />
-
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={6}>
-              <motion.div
-                ref={heroRef}
-                initial={{ opacity: 0, x: -50 }}
-                animate={heroInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.8 }}
-              >
-                <Typography
-                  variant="h1"
-                  sx={{
-                    fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
-                    fontWeight: 800,
-                    mb: 2,
-                    background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  AI Solutions
-                </Typography>
-                <Typography
-                  variant="h5"
-                  color="text.secondary"
-                  sx={{ mb: 4, maxWidth: 600, lineHeight: 1.6 }}
-                >
-                  Enduring excellence in artificial intelligence. We craft sustainable AI solutions 
-                  that evolve with technology and deliver lasting value for your business.
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Button
-                    component={RouterLink}
-                    to="/services"
-                    variant="contained"
-                    size="large"
-                    endIcon={<ArrowForward />}
-                    sx={{
-                      py: 1.5,
-                      px: 4,
-                      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      '&:hover': {
-                        background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                      },
-                    }}
-                  >
-                    Explore Services
-                  </Button>
-                  <Button
-                    component={RouterLink}
-                    to="/contact"
-                    variant="outlined"
-                    size="large"
-                    sx={{
-                      py: 1.5,
-                      px: 4,
-                      borderColor: theme.palette.primary.main,
-                      color: theme.palette.primary.main,
-                      '&:hover': {
-                        borderColor: theme.palette.primary.dark,
-                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                      },
-                    }}
-                  >
-                    Contact Us
-                  </Button>
-                </Box>
-              </motion.div>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <motion.div
-                style={{
-                  position: 'absolute',
-                  bottom: '120%',
-                  right: '74%',
-                  width: '100px',  
-                  height: '100px', 
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ 
-                  type: 'spring', 
-                  stiffness: 100, 
-                  damping: 10,
-                  delay: 0.2
-                }}
-              >
-                <GlobeVisualization />
-              </motion.div>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
-
-      {/* Expertise Section */}
-      <Box sx={{ py: 10, position: 'relative', backgroundColor: 'background.paper' }}>
-        <Container maxWidth="lg">
-          <Typography
-            variant="h2"
-            align="center"
+        >
+          <Box
             sx={{
-              mb: 6,
-              fontWeight: 700,
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              backgroundColor: color,
+              animation: 'pulse 2s infinite',
+              '@keyframes pulse': {
+                '0%': {
+                  transform: 'scale(0.95)',
+                  boxShadow: `0 0 0 0 ${alpha(color, 0.7)}`,
+                },
+                '70%': {
+                  transform: 'scale(1)',
+                  boxShadow: `0 0 0 6px ${alpha(color, 0)}`,
+                },
+                '100%': {
+                  transform: 'scale(0.95)',
+                  boxShadow: `0 0 0 0 ${alpha(color, 0)}`,
+                },
+              },
+            }}
+          />
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: color,
+              fontWeight: 600,
+              fontSize: '0.9rem'
             }}
           >
-            Our Expertise in AI
+            {value}%
           </Typography>
-
-          <Grid container spacing={4}>
-            {[
-              {
-                title: 'AI Development',
-                description: 'Custom AI solutions tailored to your business needs. From concept to deployment, we build scalable and efficient AI systems that drive innovation.',
-                progress: 95,
-                icon: <AIDevelopmentIcon sx={{ fontSize: 40 }} />,
-              },
-              {
-                title: 'Machine Learning',
-                description: 'Advanced ML algorithms and models that learn from your data to make accurate predictions and automate decision-making processes.',
-                progress: 90,
-                icon: <MachineLearningIcon sx={{ fontSize: 40 }} />,
-              },
-              {
-                title: 'Computer Vision',
-                description: 'State-of-the-art computer vision solutions for image recognition, object detection, and visual data analysis.',
-                progress: 85,
-                icon: <ComputerVisionIcon sx={{ fontSize: 40 }} />,
-              },
-              {
-                title: 'Natural Language Processing',
-                description: 'Sophisticated NLP systems for text analysis, sentiment analysis, and human-like language understanding.',
-                progress: 88,
-                icon: <NLPIcon sx={{ fontSize: 40 }} />,
-              },
-            ].map((item, index) => (
-              <Grid item xs={12} md={6} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      height: '100%',
-                      backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                      backdropFilter: 'blur(20px)',
-                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                      borderRadius: 4,
-                      transition: 'all 0.3s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        '& .icon-container': {
-                          transform: 'scale(1.1) rotate(5deg)',
-                        },
-                      },
-                    }}
-                  >
-                    <Box 
-                      className="icon-container"
-                      sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        mb: 2,
-                        transition: 'transform 0.3s ease-in-out',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          mr: 2,
-                          p: 2,
-                          borderRadius: 3,
-                          background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                          color: 'white',
-                          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
-                        }}
-                      >
-                        {item.icon}
-                      </Box>
-                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        {item.title}
-                      </Typography>
-                    </Box>
-                    
-                    <Typography color="text.secondary" sx={{ mb: 3 }}>
-                      {item.description}
-                    </Typography>
-
-                    <Box sx={{ position: 'relative', mt: 2 }}>
-                      <LinearProgress
-                        variant="determinate"
-                        value={item.progress}
-                        sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                          '& .MuiLinearProgress-bar': {
-                            borderRadius: 4,
-                            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                          },
-                        }}
-                      />
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          position: 'absolute',
-                          right: 0,
-                          top: -20,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {item.progress}%
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
+        </Box>
       </Box>
-
-      {/* Process Section */}
-      <Box 
-        sx={{ 
-          py: 10, 
-          position: 'relative',
+      <Box
+        sx={{
+          height: 12,
+          borderRadius: 6,
+          bgcolor: alpha(theme.palette.background.paper, 0.1),
+          border: `1px solid ${alpha(color, 0.2)}`,
           overflow: 'hidden',
-          backgroundColor: '#0A192F', // Dark navy background
-          '&::before': {
+          position: 'relative',
+          boxShadow: `0 2px 8px ${alpha(color, 0.1)}`,
+          '&::after': {
             content: '""',
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: `radial-gradient(circle at 50% 50%, ${alpha('#1E2A45', 0.3)}, transparent)`,
-            zIndex: 0,
-          },
+            background: `linear-gradient(90deg, ${alpha(color, 0.1)} 0%, ${alpha(color, 0)} 100%)`,
+            zIndex: 1,
+          }
         }}
       >
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Typography
-              variant="h2"
-              align="center"
-              sx={{
-                mb: 8,
-                fontWeight: 700,
-                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Our Process
-            </Typography>
-          </motion.div>
+        <motion.div
+          initial={{ width: 0, opacity: 0 }}
+          animate={inView ? { 
+            width: `${value}%`, 
+            opacity: 1 
+          } : {}}
+          transition={{ 
+            duration: 1.5, 
+            ease: [0.87, 0, 0.13, 1],
+          }}
+          style={{
+            height: '100%',
+            background: `linear-gradient(90deg, ${color}, ${alpha(color, 0.8)})`,
+            borderRadius: 6,
+            position: 'relative',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: `linear-gradient(90deg, transparent 0%, ${alpha('#fff', 0.1)} 50%, transparent 100%)`,
+              animation: 'shine 1.5s infinite',
+            }
+          }}
+        />
+      </Box>
+    </Box>
+  );
+};
 
-          <Box sx={{ maxWidth: '800px', mx: 'auto' }}>
-            {process.map((step, index, array) => (
-              <ProcessStep
-                key={step.number}
-                number={step.number}
-                title={step.title}
-                description={step.description}
-                isLast={index === array.length - 1}
-              />
-            ))}
+function Home() {
+  const theme = useTheme();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === 'rtl';
+
+  const features = [
+    {
+      icon: <AIDevelopmentIcon />,
+      title: t('home.features.innovation.title'),
+      description: t('home.features.innovation.description'),
+    },
+    {
+      icon: <MachineLearningIcon />,
+      title: t('home.features.expertise.title'),
+      description: t('home.features.expertise.description'),
+    },
+    {
+      icon: <ComputerVisionIcon />,
+      title: t('home.features.quality.title'),
+      description: t('home.features.quality.description'),
+    },
+    {
+      icon: <NLPIcon />,
+      title: t('home.features.support.title'),
+      description: t('home.features.support.description'),
+    },
+  ];
+
+  const processSteps = [
+    {
+      number: '1',
+      title: t('home.process.steps.1.title'),
+      description: t('home.process.steps.1.description'),
+    },
+    {
+      number: '2',
+      title: t('home.process.steps.2.title'),
+      description: t('home.process.steps.2.description'),
+    },
+    {
+      number: '3',
+      title: t('home.process.steps.3.title'),
+      description: t('home.process.steps.3.description'),
+    },
+    {
+      number: '4',
+      title: t('home.process.steps.4.title'),
+      description: t('home.process.steps.4.description'),
+    },
+  ];
+
+  const skills = [
+    { skill: t('home.skills.ai'), value: 95, color: theme.palette.primary.main },
+    { skill: t('home.skills.ml'), value: 90, color: theme.palette.secondary.main },
+    { skill: t('home.skills.dl'), value: 85, color: '#00bcd4' },
+    { skill: t('home.skills.nlp'), value: 88, color: '#ff9800' },
+    { skill: t('home.skills.cv'), value: 92, color: '#e91e63' },
+    { skill: t('home.skills.robotics'), value: 87, color: '#9c27b0' },
+  ];
+
+  return (
+    <Box dir={i18n.dir}>
+      {/* Hero Section */}
+      <Box
+        sx={{
+          position: 'relative',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          overflow: 'hidden',
+          bgcolor: 'background.default',
+        }}
+      >
+        <ParticlesBackground />
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
+          <Box sx={{ textAlign: 'center', maxWidth: '800px', mx: 'auto' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <Typography
+                variant="h1"
+                sx={{
+                  fontSize: { xs: '2.5rem', md: '3.5rem' },
+                  fontWeight: 700,
+                  mb: 2,
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                {t('home.hero.title')}
+              </Typography>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontSize: { xs: '1.2rem', md: '1.5rem' },
+                  color: 'text.secondary',
+                  mb: 4,
+                  fontWeight: 400,
+                }}
+              >
+                {t('home.hero.subtitle')}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  endIcon={<ArrowForward />}
+                  component={RouterLink}
+                  to="/contact"
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontSize: '1.1rem',
+                    py: 1.5,
+                    px: 4,
+                  }}
+                >
+                  {t('home.hero.cta')}
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  component={RouterLink}
+                  to="/services"
+                  sx={{
+                    borderRadius: '50px',
+                    textTransform: 'none',
+                    fontSize: '1.1rem',
+                    py: 1.5,
+                    px: 4,
+                  }}
+                >
+                  {t('home.hero.explore')}
+                </Button>
+              </Box>
+            </motion.div>
           </Box>
         </Container>
       </Box>
 
-      {/* Integration Section */}
-      <Box 
-        sx={{ 
-          py: 12,
+      {/* AI Automation Section */}
+      <Box
+        sx={{
+          py: { xs: 12, md: 20 },
+          background: `linear-gradient(135deg, 
+            ${alpha(theme.palette.background.paper, 0.9)} 0%, 
+            ${alpha(theme.palette.background.default, 0.95)} 50%,
+            ${alpha(theme.palette.background.paper, 0.9)} 100%)
+          `,
           position: 'relative',
-          background: 'linear-gradient(180deg, rgba(30, 30, 60, 0.2) 0%, rgba(30, 30, 60, 0.4) 100%)',
-          overflow: 'hidden'
+          overflow: 'hidden',
         }}
       >
         {/* Animated background elements */}
         <Box
           sx={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: 0.1,
-            background: 'radial-gradient(circle at 50% 50%, rgba(76, 96, 255, 0.2) 0%, transparent 50%)',
-            animation: 'pulse 4s ease-in-out infinite',
-            '@keyframes pulse': {
-              '0%': { transform: 'scale(1)' },
-              '50%': { transform: 'scale(1.2)' },
-              '100%': { transform: 'scale(1)' },
-            },
+            top: '5%',
+            right: '10%',
+            width: '50%',
+            height: '50%',
+            background: `radial-gradient(circle at center, ${alpha(theme.palette.primary.main, 0.08)} 0%, transparent 70%)`,
+            filter: 'blur(80px)',
+            animation: 'float 20s ease-in-out infinite',
+            transform: 'rotate(-45deg)',
+            zIndex: 0,
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '5%',
+            left: '10%',
+            width: '40%',
+            height: '40%',
+            background: `radial-gradient(circle at center, ${alpha(theme.palette.secondary.main, 0.08)} 0%, transparent 70%)`,
+            filter: 'blur(80px)',
+            animation: 'float 15s ease-in-out infinite reverse',
+            transform: 'rotate(30deg)',
+            zIndex: 0,
           }}
         />
 
-        <Container maxWidth="lg">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Typography
-              variant="h3"
-              align="center"
-              sx={{
-                mb: 2,
-                fontWeight: 800,
-                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                position: 'relative',
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: -16,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 100,
-                  height: 4,
-                  borderRadius: 2,
-                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                }
-              }}
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+          <Box sx={{ textAlign: 'center', mb: 10 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, ease: "easeOut" }}
             >
-              Seamless Integration with Your Tech Stack
-            </Typography>
-            <Typography 
-              variant="h6" 
-              align="center" 
-              color="text.secondary"
-              sx={{ mb: 8, maxWidth: 700, mx: 'auto' }}
-            >
-              Our AI solutions integrate effortlessly with your existing infrastructure, ensuring smooth deployment and maximum efficiency
-            </Typography>
-          </motion.div>
+              <Typography
+                component="span"
+                sx={{
+                  display: 'block',
+                  color: theme.palette.primary.main,
+                  fontWeight: 600,
+                  mb: 2,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  fontSize: '1rem',
+                }}
+              >
+                {t('home.automation.subtitle')}
+              </Typography>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontSize: { xs: '2.2rem', sm: '2.5rem', md: '3.2rem' },
+                  fontWeight: 800,
+                  mb: 3,
+                  background: `linear-gradient(135deg, 
+                    ${theme.palette.primary.main}, 
+                    ${theme.palette.secondary.main}, 
+                    ${theme.palette.primary.main}
+                  )`,
+                  backgroundSize: '200% auto',
+                  animation: 'gradient 5s linear infinite',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textAlign: 'center',
+                  '@keyframes gradient': {
+                    '0%': {
+                      backgroundPosition: '0% center',
+                    },
+                    '100%': {
+                      backgroundPosition: '200% center',
+                    },
+                  },
+                }}
+              >
+                {t('home.automation.title')}
+              </Typography>
+              <Typography
+                variant="h5"
+                sx={{
+                  color: alpha(theme.palette.text.secondary, 0.9),
+                  mb: 6,
+                  maxWidth: '800px',
+                  mx: 'auto',
+                  lineHeight: 1.8,
+                  fontSize: { xs: '1.1rem', md: '1.3rem' },
+                }}
+              >
+                {t('home.automation.description')}
+              </Typography>
+            </motion.div>
+          </Box>
 
-          <Grid container spacing={4} alignItems="center">
+          <Grid container spacing={4} justifyContent="center">
             {[
-              {
-                icon: <Cloud sx={{ fontSize: 40 }} />,
-                title: 'Cloud Integration',
-                description: 'Seamlessly connect with major cloud providers including AWS, Google Cloud, and Azure',
-                gradient: '45deg, #00C6FB, #005BEA'
-              },
-              {
-                icon: <Security sx={{ fontSize: 40 }} />,
-                title: 'Secure Implementation',
-                description: 'Enterprise-grade security protocols ensuring your data remains protected',
-                gradient: '45deg, #FF512F, #DD2476'
-              },
-              {
-                icon: <Code sx={{ fontSize: 40 }} />,
-                title: 'API Compatibility',
-                description: 'RESTful APIs and SDKs for easy integration with your existing applications',
-                gradient: '45deg, #4776E6, #8E54E9'
-              }
-            ].map((feature, index) => (
+              { icon: AutoAwesome, color: '#FF6B6B' },
+              { icon: Psychology, color: '#4ECDC4' },
+              { icon: Speed, color: '#45B7D1' },
+            ].map((item, index) => (
               <Grid item xs={12} md={4} key={index}>
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: index * 0.2 }}
                 >
-                  <Paper
-                    elevation={0}
+                  <Box
                     sx={{
                       p: 4,
                       height: '100%',
-                      minHeight: 280,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                      backdropFilter: 'blur(20px)',
-                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                      borderRadius: 4,
+                      borderRadius: '24px',
+                      background: `linear-gradient(145deg, 
+                        ${alpha(theme.palette.background.paper, 0.9)}, 
+                        ${alpha(theme.palette.background.default, 0.8)}
+                      )`,
+                      backdropFilter: 'blur(10px)',
+                      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      position: 'relative',
                       overflow: 'hidden',
-                      transition: 'all 0.3s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        '& .integration-icon': {
-                          transform: 'scale(1.1) rotate(5deg)',
-                        },
-                        '& .integration-gradient': {
-                          opacity: 0.15,
-                        }
-                      },
-                    }}
-                  >
-                    {/* Background Gradient */}
-                    <Box
-                      className="integration-gradient"
-                      sx={{
+                      '&::before': {
+                        content: '""',
                         position: 'absolute',
                         top: 0,
                         left: 0,
                         right: 0,
-                        bottom: 0,
-                        background: `linear-gradient(${feature.gradient})`,
-                        opacity: 0.1,
-                        transition: 'opacity 0.3s ease-in-out',
+                        height: '100%',
+                        background: `linear-gradient(180deg, 
+                          ${alpha(item.color, 0.05)} 0%, 
+                          ${alpha(item.color, 0.02)} 100%
+                        )`,
+                        opacity: 0,
+                        transition: 'opacity 0.4s ease',
+                      },
+                      '&:hover': {
+                        transform: 'translateY(-12px)',
+                        boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.1)}`,
+                        border: `1px solid ${alpha(item.color, 0.3)}`,
+                        '&::before': {
+                          opacity: 1,
+                        },
+                        '& .feature-icon': {
+                          transform: 'scale(1.1)',
+                          boxShadow: `0 12px 40px ${alpha(item.color, 0.4)}`,
+                          '& .icon-animation': {
+                            transform: 'rotate(360deg)',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <Box
+                      className="feature-icon"
+                      sx={{
+                        width: 90,
+                        height: 90,
+                        borderRadius: '28px',
+                        background: `linear-gradient(135deg, 
+                          ${alpha(item.color, 0.9)}, 
+                          ${alpha(item.color, 0.7)}
+                        )`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mb: 4,
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        position: 'relative',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          inset: -1,
+                          borderRadius: '28px',
+                          padding: 1,
+                          background: `linear-gradient(135deg, 
+                            ${alpha(item.color, 0.9)}, 
+                            ${alpha(item.color, 0.7)}
+                          )`,
+                          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                          WebkitMaskComposite: 'xor',
+                          maskComposite: 'exclude',
+                        },
                       }}
-                    />
-                    
-                    {/* Content */}
-                    <Box sx={{ position: 'relative' }}>
-                      <Box
-                        className="integration-icon"
-                        sx={{
-                          display: 'inline-flex',
-                          p: 2,
-                          borderRadius: 3,
-                          background: `linear-gradient(${feature.gradient})`,
-                          color: 'white',
-                          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
-                          mb: 3,
-                          transition: 'transform 0.3s ease-in-out',
+                    >
+                      <motion.div
+                        className="icon-animation"
+                        initial={{ rotate: 0 }}
+                        whileHover={{ rotate: 360 }}
+                        transition={{
+                          duration: 0.8,
+                          ease: "easeInOut",
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       >
-                        {feature.icon}
-                      </Box>
-                      
-                      <Typography 
-                        variant="h5" 
-                        sx={{ 
-                          mb: 2,
-                          fontWeight: 700,
-                          background: `linear-gradient(${feature.gradient})`,
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        {feature.title}
-                      </Typography>
-                      
-                      <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                        {feature.description}
-                      </Typography>
+                        <item.icon
+                          sx={{
+                            fontSize: 45,
+                            color: 'white',
+                            filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.2))',
+                          }}
+                        />
+                      </motion.div>
                     </Box>
-                  </Paper>
+
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        mb: 2.5,
+                        fontWeight: 700,
+                        background: `linear-gradient(135deg, 
+                          ${item.color}, 
+                          ${alpha(item.color, 0.8)}
+                        )`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        fontSize: { xs: '1.4rem', md: '1.5rem' },
+                      }}
+                    >
+                      {t(`home.automation.features.${index + 1}.title`)}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: alpha(theme.palette.text.secondary, 0.9),
+                        lineHeight: 1.8,
+                        fontSize: '1.05rem',
+                      }}
+                    >
+                      {t(`home.automation.features.${index + 1}.description`)}
+                    </Typography>
+                  </Box>
                 </motion.div>
               </Grid>
             ))}
           </Grid>
 
-          {/* Integration Platforms */}
-          <Box sx={{ mt: 8 }}>
+          <Box sx={{ textAlign: 'center', mt: 10 }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.8 }}
             >
-              <Paper
-                elevation={0}
+              <Button
+                variant="contained"
+                size="large"
+                component={RouterLink}
+                to="/services"
                 sx={{
-                  p: 4,
-                  backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                  backdropFilter: 'blur(20px)',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                  borderRadius: 4,
+                  borderRadius: '50px',
+                  textTransform: 'none',
+                  fontSize: '1.2rem',
+                  py: 2,
+                  px: 8,
+                  background: `linear-gradient(135deg, 
+                    ${theme.palette.primary.main}, 
+                    ${theme.palette.secondary.main}
+                  )`,
+                  boxShadow: `0 8px 30px ${alpha(theme.palette.primary.main, 0.3)}`,
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-3px)',
+                    boxShadow: `0 12px 40px ${alpha(theme.palette.primary.main, 0.4)}`,
+                    background: `linear-gradient(135deg, 
+                      ${theme.palette.primary.main}, 
+                      ${theme.palette.secondary.main}
+                    )`,
+                  },
                 }}
               >
-                <Grid container spacing={3} alignItems="center" justifyContent="center">
-                  <Grid item xs={12}>
-                    <Typography 
-                      variant="h6" 
-                      align="center" 
-                      sx={{ mb: 4, color: 'text.secondary' }}
-                    >
-                      Trusted by Leading Platforms
-                    </Typography>
-                  </Grid>
-                  {['AWS', 'Google Cloud', 'Azure', 'Docker', 'Kubernetes'].map((platform, index) => (
-                    <Grid item key={index}>
-                      <Box
-                        sx={{
-                          px: 3,
-                          py: 2,
-                          borderRadius: 2,
-                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                          color: theme.palette.primary.main,
-                          fontWeight: 600,
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                            transform: 'translateY(-2px)',
-                          }
-                        }}
-                      >
-                        {platform}
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Paper>
+                {t('home.automation.cta')}
+              </Button>
             </motion.div>
           </Box>
         </Container>
       </Box>
 
-      {/* Why Choose Us Section */}
-      <Box sx={{ py: 10, position: 'relative', backgroundColor: 'background.default' }}>
+      {/* Our Expertise Section */}
+      <Box sx={{ py: { xs: 10, md: 15 }, bgcolor: 'background.default' }}>
         <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
+            <Typography
+              variant="h2"
+              sx={{
+                fontSize: { xs: '2rem', md: '2.5rem' },
+                fontWeight: 700,
+                mb: 2,
+                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              {t('home.skills.title')}
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'text.secondary',
+                mb: 6,
+                maxWidth: '600px',
+                mx: 'auto',
+              }}
+            >
+              {t('home.skills.subtitle')}
+            </Typography>
+          </Box>
+
+          <Grid container spacing={6}>
+            <Grid item xs={12} md={6}>
+              {skills.map((skill, index) => (
+                <SkillBar
+                  key={index}
+                  skill={skill.skill}
+                  value={skill.value}
+                  color={skill.color}
+                />
+              ))}
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                style={{ height: '500px' }}
+              >
+                <Box
+                  sx={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    background: alpha(theme.palette.background.paper, 0.1),
+                    backdropFilter: 'blur(10px)',
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                    boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.15)}`,
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '100%',
+                      background: `linear-gradient(180deg, 
+                        ${alpha(theme.palette.primary.main, 0.1)} 0%, 
+                        ${alpha(theme.palette.secondary.main, 0.1)} 100%
+                      )`,
+                      zIndex: 1,
+                    },
+                    transform: isRTL ? 'scaleX(-1)' : 'none',
+                  }}
+                >
+                  <Box
+                    component="video"
+                    src="/assets/Object_detection.mp4"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      transform: isRTL ? 'scaleX(-1)' : 'none',
+                    }}
+                  />
+                </Box>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* Process Section */}
+      <Box
+        sx={{
+          py: { xs: 10, md: 15 },
+          background: `linear-gradient(135deg, ${alpha(theme.palette.background.default, 0.97)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Animated background elements */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '10%',
+            left: '5%',
+            width: '40%',
+            height: '40%',
+            background: `radial-gradient(circle at center, ${alpha(theme.palette.primary.main, 0.15)} 0%, transparent 70%)`,
+            filter: 'blur(50px)',
+            animation: 'float 10s ease-in-out infinite',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '10%',
+            right: '5%',
+            width: '35%',
+            height: '35%',
+            background: `radial-gradient(circle at center, ${alpha(theme.palette.secondary.main, 0.15)} 0%, transparent 70%)`,
+            filter: 'blur(50px)',
+            animation: 'float 8s ease-in-out infinite reverse',
+          }}
+        />
+
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
           >
             <Typography
               variant="h2"
@@ -890,146 +826,80 @@ const Home = () => {
                 background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                position: 'relative',
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: -16,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 100,
-                  height: 4,
-                  borderRadius: 2,
-                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                }
+                textShadow: `0 2px 10px ${alpha(theme.palette.primary.main, 0.3)}`,
               }}
             >
-              Why Choose Us
+              {t('home.process.title')}
             </Typography>
-            <Typography 
-              variant="h6" 
-              align="center" 
+            <Typography
+              variant="h5"
+              align="center"
               color="text.secondary"
-              sx={{ mb: 8, maxWidth: 600, mx: 'auto' }}
+              sx={{ mb: 10, maxWidth: 700, mx: 'auto', opacity: 0.8 }}
             >
-              We combine cutting-edge technology with expertise to deliver exceptional AI solutions
+              {t('home.process.subtitle')}
             </Typography>
           </motion.div>
 
           <Grid container spacing={4}>
-            {[
-              {
-                icon: <Speed sx={{ fontSize: 40 }} />,
-                title: 'High Performance',
-                description: 'Our AI solutions are optimized for maximum efficiency and speed, ensuring seamless operation and rapid results.',
-                gradient: '45deg, #FF6B6B, #FF8E53'
-              },
-              {
-                icon: <Psychology sx={{ fontSize: 40 }} />,
-                title: 'Advanced AI',
-                description: 'Cutting-edge machine learning algorithms that evolve with your needs, providing intelligent and adaptive decision-making.',
-                gradient: '45deg, #4E65FF, #92EFFD'
-              },
-              {
-                icon: <DataObject sx={{ fontSize: 40 }} />,
-                title: 'Data Analytics',
-                description: 'Transform complex data into actionable insights with our powerful analytics tools and visualization capabilities.',
-                gradient: '45deg, #6B4EFF, #B265FF'
-              }
-            ].map((feature, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.2 }}
-                >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      height: '100%',
-                      backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                      backdropFilter: 'blur(20px)',
-                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                      borderRadius: 4,
-                      position: 'relative',
-                      overflow: 'hidden',
-                      transition: 'all 0.3s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        '& .feature-icon': {
-                          transform: 'scale(1.1) rotate(5deg)',
-                        },
-                        '& .feature-gradient': {
-                          opacity: 0.15,
-                        }
-                      },
-                    }}
-                  >
-                    {/* Background Gradient */}
-                    <Box
-                      className="feature-gradient"
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: `linear-gradient(${feature.gradient})`,
-                        opacity: 0.1,
-                        transition: 'opacity 0.3s ease-in-out',
-                      }}
-                    />
-                    
-                    {/* Content */}
-                    <Box sx={{ position: 'relative' }}>
-                      <Box
-                        className="feature-icon"
-                        sx={{
-                          display: 'inline-flex',
-                          p: 2,
-                          borderRadius: 3,
-                          background: `linear-gradient(${feature.gradient})`,
-                          color: 'white',
-                          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
-                          mb: 3,
-                          transition: 'transform 0.3s ease-in-out',
-                        }}
-                      >
-                        {feature.icon}
-                      </Box>
-                      
-                      <Typography 
-                        variant="h5" 
-                        sx={{ 
-                          mb: 2,
-                          fontWeight: 700,
-                          background: `linear-gradient(${feature.gradient})`,
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        {feature.title}
-                      </Typography>
-                      
-                      <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                        {feature.description}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </motion.div>
+            {processSteps.map((step, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <ProcessStep
+                  number={step.number}
+                  title={step.title}
+                  description={step.description}
+                  isLast={index === processSteps.length - 1}
+                />
               </Grid>
             ))}
           </Grid>
         </Container>
       </Box>
 
-      {/* Testimonials Section */}
-      <Container maxWidth="lg" sx={{ mb: 12, position: 'relative', zIndex: 1 }}>
-        <Testimonials />
-      </Container>
+      {/* CTA Section */}
+      <Box
+        sx={{
+          py: 8,
+          bgcolor: 'background.paper',
+          textAlign: 'center',
+        }}
+      >
+        <Container maxWidth="md">
+          <Typography
+            variant="h2"
+            sx={{
+              mb: 2,
+              fontWeight: 700,
+              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            {t('home.cta.title')}
+          </Typography>
+          <Typography variant="h5" sx={{ mb: 4, color: 'text.secondary' }}>
+            {t('home.cta.subtitle')}
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            component={RouterLink}
+            to="/contact"
+            endIcon={isRTL ? <ArrowForward sx={{ transform: 'scaleX(-1)' }} /> : <ArrowForward />}
+            sx={{
+              borderRadius: '50px',
+              textTransform: 'none',
+              fontSize: '1.1rem',
+              py: 1.5,
+              px: 4,
+            }}
+          >
+            {t('home.cta.button')}
+          </Button>
+        </Container>
+      </Box>
     </Box>
   );
-};
+}
 
 export default Home;

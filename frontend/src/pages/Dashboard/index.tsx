@@ -1,28 +1,20 @@
-import React, { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { fetchTeamMembers } from '../../store/slices/teamSlice';
-import { fetchServices } from '../../store/slices/servicesSlice';
-import { fetchCaseStudies } from '../../store/slices/caseStudiesSlice';
-import DashboardLayout from '../../components/DashboardLayout';
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import { Box, Container, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard: React.FC = () => {
-  const dispatch = useDispatch();
-  const location = useLocation();
-
-  useEffect(() => {
-    console.log('Dashboard rendered, current path:', location.pathname);
-    
-    // Dispatch actions to fetch data
-    dispatch(fetchTeamMembers());
-    dispatch(fetchServices());
-    dispatch(fetchCaseStudies());
-  }, [dispatch, location]);
+  const { t } = useTranslation();
 
   return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
+    <Box sx={{ minHeight: '100vh', py: 4, bgcolor: 'background.default' }}>
+      <Container maxWidth="xl">
+        <Typography variant="h4" sx={{ mb: 4 }}>
+          {t('dashboard.title')}
+        </Typography>
+        <Outlet />
+      </Container>
+    </Box>
   );
 };
 

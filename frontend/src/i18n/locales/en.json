@@ -1,0 +1,314 @@
+{
+  "navigation": {
+    "home": "Home",
+    "services": "Our Services",
+    "pricing": "Affordable Pricing",
+    "contact": "Contact Us",
+    "language": "Select Language",
+    "dashboard": "Dashboard"
+  },
+  "home": {
+    "hero": {
+      "title": "Transform Your Business with Cutting-Edge AI",
+      "subtitle": "Unlock limitless possibilities with our innovative AI solutions",
+      "cta": "Embark on Your AI Journey",
+      "explore": "Explore Our Advanced Services"
+    },
+    "features": {
+      "title": "Why Choose Us",
+      "subtitle": "Experience Excellence in AI Innovation",
+      "innovation": {
+        "title": "Pioneering AI Technologies",
+        "description": "Stay ahead with our groundbreaking AI technologies"
+      },
+      "expertise": {
+        "title": "Expert Team Committed to Your Success",
+        "description": "Our team of experts is dedicated to delivering success"
+      },
+      "quality": {
+        "title": "Excellence Assured Through Rigorous Standards",
+        "description": "We ensure top-notch quality through rigorous standards"
+      },
+      "support": {
+        "title": "Reliable 24/7 Support for Peace of Mind",
+        "description": "Enjoy peace of mind with our 24/7 support services"
+      }
+    },
+    "process": {
+      "title": "Our Streamlined Process",
+      "subtitle": "Achieve Success in Four Easy Steps",
+      "steps": {
+        "1": {
+          "title": "Consultation",
+          "description": "Tailored to Your Needs"
+        },
+        "2": {
+          "title": "Strategic Planning",
+          "description": "Personalized Success Strategy"
+        },
+        "3": {
+          "title": "Execution",
+          "description": "Precise and Careful Implementation"
+        },
+        "4": {
+          "title": "Improvement",
+          "description": "Continuous Refinement for Best Results"
+        }
+      }
+    },
+    "skills": {
+      "title": "Our Expertise",
+      "subtitle": "Harness AI's Power for Your Business",
+      "ai": "Artificial Intelligence",
+      "ml": "Machine Learning",
+      "dl": "Deep Learning",
+      "nlp": "Natural Language Processing",
+      "cv": "Computer Vision",
+      "robotics": "Robotics & Automation"
+    },
+    "automation": {
+      "title": "AI Automation Solutions",
+      "subtitle": "Revolutionize Workflows with Intelligent Automation",
+      "description": "Transform operations with cutting-edge AI automation. Streamline processes, enhance efficiency, and drive innovation.",
+      "features": {
+        "1": {
+          "title": "Smart Workflows",
+          "description": "Automate complex business processes with intelligent decision-making capabilities"
+        },
+        "2": {
+          "title": "Real-time Analytics",
+          "description": "Get instant insights and predictions to make data-driven decisions"
+        },
+        "3": {
+          "title": "Adaptive Learning",
+          "description": "Systems that continuously learn and improve from operational data"
+        }
+      },
+      "cta": "Discover Our Solutions"
+    },
+    "cta": {
+      "title": "Ready to Transform Your Business?",
+      "subtitle": "Let's discuss how we can help you achieve your goals",
+      "button": "Contact Us Today"
+    }
+  },
+  "pricing": {
+    "title": "Transparent and Competitive Pricing",
+    "subtitle": "Find the perfect plan tailored to your business needs",
+    "custom_services": {
+      "services": [
+        {
+          "title": "AI Assistant Integration",
+          "description": "Custom AI assistants designed specifically for your business processes and industry",
+          "features": [
+            "Tailored to your business workflow",
+            "Industry-specific knowledge base",
+            "Seamless integration with existing systems",
+            "Custom voice and personality"
+          ],
+          "button": "Contact for Custom Pricing"
+        },
+        {
+          "title": "R&D Products",
+          "description": "Cutting-edge research and development solutions for innovative businesses",
+          "features": [
+            "Custom AI model development",
+            "Proof of concept development",
+            "Research collaboration",
+            "Patent-ready solutions"
+          ],
+          "button": "Contact for Custom Pricing"
+        }
+      ],
+      "automation_title": "AI Automation Plans"
+    },
+    "tiers": {
+      "basic": {
+        "name": "Basic",
+        "price": "$499",
+        "period": "Per month",
+        "description": "Essential AI automation for startups",
+        "features": {
+          "ai_automation": "AI-powered process automation",
+          "workflows": "5 automation workflows",
+          "monitoring": "24/7 monitoring",
+          "analytics": "Basic analytics dashboard",
+          "email_support": "Email support",
+          "custom_models": "Custom AI models",
+          "api": "API integration"
+        },
+        "button": "Start Basic Plan"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "$699",
+        "period": "Per month",
+        "description": "Advanced automation for growing businesses",
+        "features": {
+          "basic_features": "Everything in Basic",
+          "unlimited": "Unlimited automation workflows",
+          "advanced_ai": "Advanced AI capabilities",
+          "priority": "Priority support",
+          "custom_models": "Custom AI models",
+          "api": "API integration",
+          "manager": "Dedicated success manager"
+        },
+        "button": "Upgrade to Pro",
+        "popular": "Most Popular"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "price": "Custom",
+        "period": "Per month",
+        "description": "Full-scale AI transformation for enterprises",
+        "features": {
+          "pro_features": "Everything in Pro",
+          "custom_dev": "Custom AI solution development",
+          "dedicated_team": "Dedicated AI team",
+          "sla": "Enterprise SLA",
+          "deployment": "On-premise deployment",
+          "security": "Advanced security features",
+          "premium_support": "24/7 premium support"
+        },
+        "button": "Contact Sales"
+      }
+    }
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Empowering businesses with cutting-edge AI solutions",
+    "ai_automation": {
+      "title": "AI Automation Services",
+      "description": "Transform your business operations with our cutting-edge AI automation solutions. We streamline workflows and enhance efficiency using advanced AI technologies."
+    },
+    "custom_ai": {
+      "title": "Custom AI Solutions",
+      "description": "Get bespoke AI models tailored to your industry-specific challenges. Our expert team develops custom solutions that address your unique business needs."
+    },
+    "rd_products": {
+      "title": "R&D Products",
+      "description": "Stay ahead of the curve with our innovative AI-powered hardware and software tools. We develop cutting-edge solutions that push the boundaries of technology."
+    },
+    "consultations": {
+      "title": "Consultations",
+      "description": "Benefit from our expert insights and strategies for seamless AI integration. Our consultants help you navigate the AI landscape and maximize ROI."
+    },
+    "cta": {
+      "title": "Ready to Transform Your Business?",
+      "description": "Explore our pricing plans or get in touch with our team to discuss your specific needs and how we can help you achieve your goals.",
+      "contact_button": "Contact Us",
+      "pricing_button": "View Pricing"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": {
+      "title": "Dashboard Overview",
+      "services": "Total Services",
+      "servicesCount": "{{count}} Active Services",
+      "messages": "Unread Messages",
+      "messagesCount": "{{count}} New Messages",
+      "team": "Team Members",
+      "teamCount": "{{count}} Active Members"
+    },
+    "services": {
+      "title": "Services Management",
+      "name": "Service Name",
+      "description": "Description",
+      "actions": "Actions",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "messages": {
+      "title": "Message Inbox",
+      "view": "View Details"
+    }
+  },
+  "contact": {
+    "title": "Reach Out to Us",
+    "subtitle": "Transform your business with our AI expertise. Have questions or want to explore our offerings? Get in touch with us.",
+    "contact_info": {
+      "email": {
+        "label": "Email",
+        "value": "contact@mantiq.om"
+      },
+      "phone": {
+        "label": "Phone",
+        "value": "+968 9590 1821"
+      },
+      "address": {
+        "label": "Location",
+        "value": "Muscat, Oman"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How can I get started with AI solutions for my business?",
+          "answer": "We offer a free initial consultation to understand your unique business needs. Our team will assess your requirements and recommend tailored AI solutions that can drive efficiency and innovation."
+        },
+        {
+          "question": "What industries do you specialize in?",
+          "answer": "We have expertise across multiple sectors including agriculture, healthcare, finance, manufacturing, and e-commerce. Our AI solutions are adaptable and can be customized to fit your specific industry challenges."
+        },
+        {
+          "question": "How long does it take to implement an AI solution?",
+          "answer": "Implementation time varies depending on project complexity. Typically, our solutions can be deployed within 4-12 weeks. We provide a detailed project timeline during our initial consultation."
+        },
+        {
+          "question": "What kind of support do you offer after implementation?",
+          "answer": "We provide comprehensive post-implementation support including system monitoring, performance optimization, regular updates, and 24/7 technical assistance to ensure smooth operation of your AI solutions."
+        },
+        {
+          "question": "Are your AI solutions scalable?",
+          "answer": "Absolutely! Our AI solutions are designed with scalability in mind. We use cloud-based architectures and modular designs that allow easy expansion as your business grows and evolves."
+        }
+      ]
+    },
+    "form": {
+      "name": {
+        "label": "Full Name",
+        "placeholder": "Enter your full name",
+        "error": "Please enter your full name"
+      },
+      "email": {
+        "label": "Email Address",
+        "placeholder": "Enter your email",
+        "error": {
+          "required": "Email is required",
+          "invalid": "Invalid email address"
+        }
+      },
+      "phone": {
+        "label": "Phone Number",
+        "placeholder": "Enter your phone number",
+        "error": "Please enter a valid phone number"
+      },
+      "company": {
+        "label": "Company Name",
+        "placeholder": "Your company name (optional)"
+      },
+      "service_interest": {
+        "label": "Area of Interest",
+        "placeholder": "Select service of interest",
+        "options": [
+          "AI Consulting",
+          "Custom AI Solutions",
+          "Business Automation",
+          "Machine Learning",
+          "Data Analytics",
+          "Other"
+        ]
+      },
+      "message": {
+        "label": "Your Message",
+        "placeholder": "Tell us about your project or inquiry",
+        "error": "Please write a message"
+      },
+      "submit": "Send Message",
+      "submit_success": "Message sent successfully! We'll get back to you soon.",
+      "submit_error": "Failed to send message. Please try again."
+    }
+  }
+}
